@@ -1,5 +1,5 @@
+use crate::error::{Error, Result};
 use chrono::{Duration, Utc};
-use jsonwebtoken::errors::Error;
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, TokenData, Validation};
 use serde::{Deserialize, Serialize};
 
@@ -117,12 +117,12 @@ impl Jwt {
     /// # Returns
     ///
     /// * A `Result` containing `TokenData<Claims>` if validation is successful, or an `Error` otherwise.
-    fn validate_token(&self, kind: TokenKind, token: &str) -> Result<TokenData<Claims>, Error> {
+    fn validate_token(&self, kind: TokenKind, token: &str) -> Result<TokenData<Claims>> {
         let (key, validation) = match kind {
             TokenKind::ACCESS => (&self.decoding_access_key, &self.validation_access_key),
             TokenKind::REFRESH => (&self.decoding_refresh_key, &self.validation_refresh_key),
         };
-        decode::<Claims>(token, key, validation)
+        Ok(decode::<Claims>(token, key, validation)?)
     }
 }
 
@@ -208,7 +208,6 @@ pub struct JwtCfg {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use jsonwebtoken::errors::ErrorKind;
     use std::time::{SystemTime, UNIX_EPOCH};
 
     /// Sets up a `Jwt` instance for testing.
@@ -298,8 +297,8 @@ mod tests {
         let validation_result = jwt.validate_access_token(&access_token);
 
         assert!(validation_result.is_err());
-        match validation_result.unwrap_err().kind() {
-            ErrorKind::ExpiredSignature => (),
+        match validation_result.unwrap_err() {
+            Error::JwtError(_) => (),
             _ => panic!("Expected ErrorKind::ExpiredSignature"),
         }
     }
@@ -312,8 +311,8 @@ mod tests {
         let validation_result = jwt.validate_access_token(invalid_token);
 
         assert!(validation_result.is_err());
-        match validation_result.unwrap_err().kind() {
-            ErrorKind::InvalidToken => (),
+        match validation_result.unwrap_err() {
+            Error::JwtError(_) => (),
             _ => panic!("Expected ErrorKind::InvalidToken"),
         }
     }
