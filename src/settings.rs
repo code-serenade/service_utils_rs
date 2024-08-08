@@ -1,9 +1,13 @@
 use config::{Config, ConfigError};
 use serde::Deserialize;
 
+#[cfg(feature = "jwt")]
+use crate::services::jwt::JwtCfg;
+
 #[derive(Debug, Deserialize)]
 pub struct Settings {
-    pub jwt: service_utils_rs::services::jwt::JwtCfg,
+    #[cfg(feature = "jwt")]
+    pub jwt: JwtCfg,
 }
 
 impl Settings {

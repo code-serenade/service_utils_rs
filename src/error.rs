@@ -1,8 +1,5 @@
 use thiserror::Error;
 
-#[cfg(feature = "jwt")]
-use jsonwebtoken;
-
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("auth error: {0}")]

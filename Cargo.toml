@@ -11,6 +11,7 @@ documentation = "https://docs.rs/service_utils_rs"
 
 [dependencies]
 chrono = "0.4.38"
+config = "0.14.0"
 jsonwebtoken = { version = "9.3.0", optional = true }
 serde = { version = "1.0.204", features = ["derive"] }
 thiserror = "1.0.63"

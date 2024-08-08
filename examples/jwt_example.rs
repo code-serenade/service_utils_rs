@@ -1,7 +1,6 @@
-mod settings;
-use crate::settings::Settings;
 use service_utils_rs::error::Result;
 use service_utils_rs::services::jwt::Jwt;
+use service_utils_rs::settings::Settings;
 
 fn main() -> Result<()> {
     let settings = Settings::new().unwrap();
@@ -18,3 +17,5 @@ fn main() -> Result<()> {
     println!("reflesh claims: {:?}", reflesh);
     Ok(())
 }
+
+// cargo run --example jwt_example --features jwt
