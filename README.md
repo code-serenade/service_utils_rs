@@ -18,9 +18,7 @@ Add the following dependency to your `Cargo.toml` file:
 
 ```toml
 [dependencies]
-service_utils_rs = "0.1.1"
-config = "0.13.0"
-serde = { version = "1.0", features = ["derive"] }
+service_utils_rs = "0.1.2"
 ```
 
 ## Usage
