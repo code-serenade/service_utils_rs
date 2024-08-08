@@ -1,0 +1,7 @@
+[release]
+level = "patch"
+publish = true
+doc = true
+doc_features = ["jwt"]
+push_remote = "origin"
+registry = "crates-io"
