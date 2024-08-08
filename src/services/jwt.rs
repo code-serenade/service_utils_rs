@@ -1,4 +1,7 @@
-use crate::error::{Error, Result};
+use crate::{
+    error::{Error, Result},
+    settings::JwtCfg,
+};
 use chrono::{Duration, Utc};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, TokenData, Validation};
 use serde::{Deserialize, Serialize};
@@ -193,16 +196,6 @@ impl Jwt {
             refresh_token_duration,
         }
     }
-}
-
-/// Struct representing the JWT configuration parameters.
-#[derive(Debug, Deserialize)]
-pub struct JwtCfg {
-    pub access_secret: String,
-    pub refresh_secret: String,
-    pub audience: String,
-    pub access_token_duration: usize,
-    pub refresh_token_duration: usize,
 }
 
 #[cfg(test)]

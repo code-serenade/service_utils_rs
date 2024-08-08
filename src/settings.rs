@@ -1,19 +1,25 @@
 use config::{Config, ConfigError};
 use serde::Deserialize;
 
-#[cfg(feature = "jwt")]
-use crate::services::jwt::JwtCfg;
-
 #[derive(Debug, Deserialize)]
 pub struct Settings {
-    #[cfg(feature = "jwt")]
     pub jwt: JwtCfg,
 }
 
+/// Struct representing the JWT configuration parameters.
+#[derive(Debug, Deserialize)]
+pub struct JwtCfg {
+    pub access_secret: String,
+    pub refresh_secret: String,
+    pub audience: String,
+    pub access_token_duration: usize,
+    pub refresh_token_duration: usize,
+}
+
 impl Settings {
-    pub fn new() -> Result<Self, ConfigError> {
+    pub fn new(config_path: &str) -> Result<Self, ConfigError> {
         let c = Config::builder()
-            .add_source(config::File::with_name("config/services"))
+            .add_source(config::File::with_name(config_path))
             .build()?;
         c.try_deserialize()
     }

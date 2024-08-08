@@ -3,7 +3,7 @@ use service_utils_rs::services::jwt::Jwt;
 use service_utils_rs::settings::Settings;
 
 fn main() -> Result<()> {
-    let settings = Settings::new().unwrap();
+    let settings = Settings::new("examples/config/services.toml").unwrap();
     println!("{:?}", settings);
 
     let jwt = Jwt::new(settings.jwt);
