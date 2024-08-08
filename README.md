@@ -1,6 +1,3 @@
-Sure, here's the `README.md` file in raw Markdown format that you can copy directly:
-
-```markdown
 # service_utils_rs
 
 `service_utils_rs` is a Rust library that provides utility functions to simplify and speed up service development.
