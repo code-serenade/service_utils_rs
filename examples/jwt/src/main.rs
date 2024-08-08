@@ -1,7 +1,7 @@
 mod settings;
 use crate::settings::Settings;
 use service_utils_rs::error::Result;
-use service_utils_rs::jwt::Jwt;
+use service_utils_rs::services::jwt::Jwt;
 
 fn main() -> Result<()> {
     let settings = Settings::new().unwrap();

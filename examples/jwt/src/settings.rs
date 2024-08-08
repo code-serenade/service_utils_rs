@@ -3,7 +3,7 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct Settings {
-    pub jwt: service_utils_rs::jwt::JwtCfg,
+    pub jwt: service_utils_rs::services::jwt::JwtCfg,
 }
 
 impl Settings {

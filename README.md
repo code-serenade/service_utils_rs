@@ -15,4 +15,4 @@ Add the following dependency to your `Cargo.toml` file:
 
 ```toml
 [dependencies]
-service_utils_rs = "0.1.0"
+service_utils_rs = "0.1.1"
