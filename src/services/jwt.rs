@@ -62,7 +62,7 @@ impl Jwt {
         let mut validation_access_key = Validation::default();
         validation_access_key.set_audience(&[cfg.audience.clone()]);
         let mut validation_refresh_key = validation_access_key.clone();
-        validation_refresh_key.validate_exp = false;
+        validation_refresh_key.validate_exp = true; // 这里将 validate_exp 设置为 true
         validation_refresh_key.required_spec_claims.clear();
         Self {
             header,
@@ -88,8 +88,8 @@ impl Jwt {
     ///
     /// * A `Result` containing a tuple of the access token and the refresh token, or an `Error`.
     pub fn generate_token_pair(&self, sub: String) -> Result<(String, String)> {
-        let access_token = self.generate_token(TokenKind::ACCESS, &sub)?;
-        let refresh_token = self.generate_token(TokenKind::REFRESH, &sub)?;
+        let access_token = self.generate_token(&TokenKind::ACCESS, &sub)?;
+        let refresh_token = self.generate_token(&TokenKind::REFRESH, &sub)?;
         Ok((access_token, refresh_token))
     }
 
@@ -103,7 +103,7 @@ impl Jwt {
     ///
     /// * A `Result` containing the generated access token as a string, or an `Error`.
     pub fn generate_access_token(&self, sub: String) -> Result<String> {
-        self.generate_token(TokenKind::ACCESS, &sub)
+        self.generate_token(&TokenKind::ACCESS, &sub)
     }
 
     /// Refreshes an access token using a refresh token.
@@ -158,17 +158,11 @@ impl Jwt {
     /// # Returns
     ///
     /// * A `Result` containing the generated token as a string, or an `Error`.
-    fn generate_token(&self, kind: TokenKind, sub: &str) -> Result<String> {
-        let duration = match kind {
-            TokenKind::ACCESS => self.access_token_duration,
-            TokenKind::REFRESH => self.refresh_token_duration,
-        };
-        let (iat, exp) = generate_expired_time(duration);
-        let key = match kind {
-            TokenKind::ACCESS => &self.encoding_access_key,
-            TokenKind::REFRESH => &self.encoding_refresh_key,
-        };
-        let claims = Claims::new(self.aud.clone(), sub.to_string(), exp, iat);
+    fn generate_token(&self, kind: &TokenKind, sub: &str) -> Result<String> {
+        let duration = self.get_token_duration(kind);
+        let (iat, exp) = self.generate_timestamps(duration);
+        let key = self.select_encoding_key(kind);
+        let claims = self.create_claims(sub, iat, exp);
         encode(&self.header, &claims, key).map_err(Error::from)
     }
 
@@ -183,11 +177,84 @@ impl Jwt {
     ///
     /// * A `Result` containing `TokenData<Claims>` if validation is successful, or an `Error`.
     fn validate_token(&self, kind: TokenKind, token: &str) -> Result<TokenData<Claims>> {
-        let (key, validation) = match kind {
+        let (key, validation) = self.select_decoding_key_and_validation(kind);
+        decode::<Claims>(token, key, validation).map_err(Error::from)
+    }
+
+    /// Selects the appropriate token duration based on the token kind.
+    ///
+    /// # Arguments
+    ///
+    /// * `kind` - The type of token (ACCESS or REFRESH).
+    ///
+    /// # Returns
+    ///
+    /// * The token duration in seconds.
+    fn get_token_duration(&self, kind: &TokenKind) -> usize {
+        match kind {
+            TokenKind::ACCESS => self.access_token_duration,
+            TokenKind::REFRESH => self.refresh_token_duration,
+        }
+    }
+
+    /// Generates the issued at (iat) and expiration (exp) times based on the provided duration.
+    ///
+    /// # Arguments
+    ///
+    /// * `duration` - The duration in seconds for which the token is valid.
+    ///
+    /// # Returns
+    ///
+    /// * A tuple containing the issued at time and expiration time as UNIX timestamps.
+    fn generate_timestamps(&self, duration: usize) -> (usize, usize) {
+        generate_expired_time(duration)
+    }
+
+    /// Selects the appropriate encoding key based on the token kind.
+    ///
+    /// # Arguments
+    ///
+    /// * `kind` - The type of token (ACCESS or REFRESH).
+    ///
+    /// # Returns
+    ///
+    /// * A reference to the selected `EncodingKey`.
+    fn select_encoding_key(&self, kind: &TokenKind) -> &EncodingKey {
+        match kind {
+            TokenKind::ACCESS => &self.encoding_access_key,
+            TokenKind::REFRESH => &self.encoding_refresh_key,
+        }
+    }
+
+    /// Creates a new `Claims` instance for the given subject, issued at time, and expiration time.
+    ///
+    /// # Arguments
+    ///
+    /// * `sub` - The subject for which the claims are generated.
+    /// * `iat` - The issued at time.
+    /// * `exp` - The expiration time.
+    ///
+    /// # Returns
+    ///
+    /// * A new `Claims` instance.
+    fn create_claims(&self, sub: &str, iat: usize, exp: usize) -> Claims {
+        Claims::new(self.aud.clone(), sub.to_string(), exp, iat)
+    }
+
+    /// Selects the appropriate decoding key and validation based on the token kind.
+    ///
+    /// # Arguments
+    ///
+    /// * `kind` - The type of token (ACCESS or REFRESH).
+    ///
+    /// # Returns
+    ///
+    /// * A tuple containing a reference to the selected `DecodingKey` and `Validation`.
+    fn select_decoding_key_and_validation(&self, kind: TokenKind) -> (&DecodingKey, &Validation) {
+        match kind {
             TokenKind::ACCESS => (&self.decoding_access_key, &self.validation_access_key),
             TokenKind::REFRESH => (&self.decoding_refresh_key, &self.validation_refresh_key),
-        };
-        decode::<Claims>(token, key, validation).map_err(Error::from)
+        }
     }
 }
 
