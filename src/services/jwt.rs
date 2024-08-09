@@ -62,7 +62,7 @@ impl Jwt {
         let mut validation_access_key = Validation::default();
         validation_access_key.set_audience(&[cfg.audience.clone()]);
         let mut validation_refresh_key = validation_access_key.clone();
-        validation_refresh_key.validate_exp = true; // 这里将 validate_exp 设置为 true
+        validation_refresh_key.validate_exp = true;
         validation_refresh_key.required_spec_claims.clear();
         Self {
             header,
