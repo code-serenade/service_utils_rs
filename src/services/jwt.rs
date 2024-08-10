@@ -130,7 +130,7 @@ impl Jwt {
     ///
     /// * A `Result` containing the `Claims` if validation is successful, or an `Error`.
     pub fn validate_access_token(&self, token: &str) -> Result<Claims> {
-        self.validate_token(TokenKind::ACCESS, token)
+        self.validate_token(&TokenKind::ACCESS, token)
             .map(|data| data.claims)
     }
 
@@ -144,7 +144,7 @@ impl Jwt {
     ///
     /// * A `Result` containing the `Claims` if validation is successful, or an `Error`.
     pub fn validate_refresh_token(&self, token: &str) -> Result<Claims> {
-        self.validate_token(TokenKind::REFRESH, token)
+        self.validate_token(&TokenKind::REFRESH, token)
             .map(|data| data.claims)
     }
 
@@ -176,7 +176,7 @@ impl Jwt {
     /// # Returns
     ///
     /// * A `Result` containing `TokenData<Claims>` if validation is successful, or an `Error`.
-    fn validate_token(&self, kind: TokenKind, token: &str) -> Result<TokenData<Claims>> {
+    fn validate_token(&self, kind: &TokenKind, token: &str) -> Result<TokenData<Claims>> {
         let (key, validation) = self.select_decoding_key_and_validation(kind);
         decode::<Claims>(token, key, validation).map_err(Error::from)
     }
@@ -250,7 +250,7 @@ impl Jwt {
     /// # Returns
     ///
     /// * A tuple containing a reference to the selected `DecodingKey` and `Validation`.
-    fn select_decoding_key_and_validation(&self, kind: TokenKind) -> (&DecodingKey, &Validation) {
+    fn select_decoding_key_and_validation(&self, kind: &TokenKind) -> (&DecodingKey, &Validation) {
         match kind {
             TokenKind::ACCESS => (&self.decoding_access_key, &self.validation_access_key),
             TokenKind::REFRESH => (&self.decoding_refresh_key, &self.validation_refresh_key),
