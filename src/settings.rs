@@ -14,6 +14,8 @@ pub struct JwtCfg {
     pub audience: String,
     pub access_token_duration: usize,
     pub refresh_token_duration: usize,
+    pub access_key_validate_exp: bool,
+    pub refresh_key_validate_exp: bool,
 }
 
 impl Settings {

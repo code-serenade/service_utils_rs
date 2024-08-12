@@ -3,4 +3,6 @@ access_secret = "3a5df12e1fc87ad045e1767e3f6a285da64139de0199f3d7b1d869f03d8eae3
 refresh_secret = "b26f570b5d72795815f898cea04a4234a932cded824081767698e58e13ff849f3b6e23fe34efb4f6d78e342f1be4eace18135994e51a070c605c6dc9698a5fab"
 audience = "test"
 access_token_duration = 3600                                                                                                                        #24h
-refresh_token_duration = 604800                                                                                                                     #7d                                                                                                                  #expired in 24hours (86400 sec)
+refresh_token_duration = 604800
+access_key_validate_exp = false
+refresh_key_validate_exp = false                                                                                                                    #7d                                                                                                                  #expired in 24hours (86400 sec)

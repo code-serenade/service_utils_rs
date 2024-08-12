@@ -62,7 +62,8 @@ impl Jwt {
         let mut validation_access_key = Validation::default();
         validation_access_key.set_audience(&[cfg.audience.clone()]);
         let mut validation_refresh_key = validation_access_key.clone();
-        validation_refresh_key.validate_exp = true;
+        validation_access_key.validate_exp = cfg.access_key_validate_exp;
+        validation_refresh_key.validate_exp = cfg.refresh_key_validate_exp;
         validation_refresh_key.required_spec_claims.clear();
         Self {
             header,
@@ -288,8 +289,10 @@ mod tests {
             access_secret: "access_secret".to_string(),
             refresh_secret: "refresh_secret".to_string(),
             audience: "test_audience".to_string(),
-            access_token_duration: 3600,   // 1 hour
-            refresh_token_duration: 86400, // 1 day
+            access_token_duration: 3600, // 1 hour
+            refresh_token_duration: 86400,
+            access_key_validate_exp: true,
+            refresh_key_validate_exp: true,
         })
     }
 
