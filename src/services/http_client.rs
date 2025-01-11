@@ -1,6 +1,5 @@
 use crate::error::{Error, Result};
 
-use indexmap::IndexMap;
 use reqwest::{header::HeaderValue, Client, Response};
 use url::Url;
 
@@ -10,7 +9,7 @@ pub struct HeaderMap {
 }
 
 impl HeaderMap {
-    // 创建一个新的 MyHeaderMap
+    // 创建一个新的 HeaderMap
     pub fn new() -> Self {
         HeaderMap {
             headers: reqwest::header::HeaderMap::new(),
@@ -64,7 +63,7 @@ impl HttpClient {
     // 设置默认的请求头
     pub fn set_default_headers(
         &mut self,
-        headers: std::collections::HashMap<&'static str, String>,
+        headers: Vec<(&'static str, String)>, // 直接使用 Vec<(&'static str, String)>
     ) -> Result<()> {
         let mut header_map = HeaderMap::new();
         for (key, value) in headers {
@@ -78,8 +77,8 @@ impl HttpClient {
     pub async fn get(
         &self,
         endpoint: &str,
-        query: Option<IndexMap<String, String>>,
-        headers: Option<IndexMap<&'static str, String>>,
+        query: Option<Vec<(String, String)>>,
+        headers: Option<Vec<(&'static str, String)>>,
     ) -> Result<Response> {
         let url = self.build_url(endpoint, query)?;
         let mut request = self.client.get(url.as_str());
@@ -94,7 +93,7 @@ impl HttpClient {
         &self,
         endpoint: &str,
         body: &serde_json::Value,
-        headers: Option<IndexMap<&'static str, String>>,
+        headers: Option<Vec<(&'static str, String)>>,
     ) -> Result<Response> {
         let url = self.build_url(endpoint, None)?;
 
@@ -110,7 +109,7 @@ impl HttpClient {
         &self,
         endpoint: &str,
         body: &serde_json::Value,
-        headers: Option<IndexMap<&'static str, String>>,
+        headers: Option<Vec<(&'static str, String)>>,
     ) -> Result<Response> {
         let url = self.build_url(endpoint, None)?;
 
@@ -125,7 +124,7 @@ impl HttpClient {
     pub async fn delete(
         &self,
         endpoint: &str,
-        headers: Option<IndexMap<&'static str, String>>,
+        headers: Option<Vec<(&'static str, String)>>,
     ) -> Result<Response> {
         let url = self.build_url(endpoint, None)?;
 
@@ -137,7 +136,7 @@ impl HttpClient {
     }
 
     // 构建完整 URL
-    fn build_url(&self, endpoint: &str, query: Option<IndexMap<String, String>>) -> Result<Url> {
+    fn build_url(&self, endpoint: &str, query: Option<Vec<(String, String)>>) -> Result<Url> {
         let mut url = if let Some(base_url) = &self.base_url {
             base_url.join(endpoint)?
         } else {
@@ -154,11 +153,11 @@ impl HttpClient {
 
     fn merge_headers(
         &self,
-        custom_headers: Option<IndexMap<&'static str, String>>,
+        custom_headers: Option<Vec<(&'static str, String)>>,
     ) -> Result<HeaderMap> {
         let mut combined_headers = self.default_headers.clone();
-        if let Some(header_map) = custom_headers {
-            for (key, value) in header_map {
+        if let Some(header_vec) = custom_headers {
+            for (key, value) in header_vec {
                 combined_headers.insert(key, value)?;
             }
         }
@@ -166,7 +165,7 @@ impl HttpClient {
     }
 }
 
-pub fn parse_url(url: &str, query: Option<IndexMap<String, String>>) -> Result<Url> {
+pub fn parse_url(url: &str, query: Option<Vec<(String, String)>>) -> Result<Url> {
     let mut url = Url::parse(url)?;
     if let Some(query_params) = query {
         let query_pairs: Vec<(String, String)> = query_params.into_iter().collect();

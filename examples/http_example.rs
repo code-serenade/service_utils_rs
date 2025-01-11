@@ -1,7 +1,5 @@
-use indexmap::IndexMap;
 use serde_json::json;
 use service_utils_rs::{error::Result, services::http_client::HttpClient};
-use std::collections::HashMap;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -12,13 +10,13 @@ async fn main() -> Result<()> {
     client.set_base_url("https://jsonplaceholder.typicode.com")?;
 
     // 设置默认的请求头
-    let mut default_headers = HashMap::new();
-    default_headers.insert("Content-Type", "application/json".to_string());
+    let mut default_headers = Vec::new();
+    default_headers.push(("Content-Type", "application/json".to_string()));
     client.set_default_headers(default_headers)?;
 
     // 定义自定义请求头
-    let mut custom_headers = IndexMap::new();
-    custom_headers.insert("Authorization", "Bearer some_token".to_string());
+    let mut custom_headers = Vec::new();
+    custom_headers.push(("Authorization", "Bearer some_token".to_string()));
 
     // 创建一个 POST 请求体
     let body = json!({
