@@ -15,12 +15,21 @@ pub enum Error {
     #[error("websocket error: {0}")]
     WsError(#[from] tokio_tungstenite::tungstenite::Error),
 
+    #[error("request error: {0}")]
+    RequestError(#[from] reqwest::Error),
+
+    #[error("url error: {0}")]
+    UrlError(#[from] url::ParseError),
+
     #[error("{message:} ({line:}, {column})")]
     CustomError {
         message: String,
         line: u32,
         column: u32,
     },
+
+    #[error("error message: {0}")]
+    ErrorMessage(String),
 
     #[error("error code: {0}")]
     ErrorCode(u16),
