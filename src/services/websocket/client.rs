@@ -10,51 +10,55 @@ use tokio::{
     sync::mpsc::{self, Receiver, Sender},
     time,
 };
-use tokio_tungstenite::{
-    connect_async, tungstenite::protocol::Message, MaybeTlsStream, WebSocketStream,
-};
+use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
 
-use super::connection::ClientConnection;
+use super::{
+    connection::ClientConnection, ClientEvents, ClientReciver, ClientSender, Message, MsgReciver,
+    MsgSender,
+};
 
 type SocketReader = SplitStream<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>>;
 type SocketWriter = SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>;
 /// Alias for the reading half of a WebSocket connection.
 
-type MsgReciver = Receiver<String>;
 /// WebSocket 客户端结构体
 pub struct WebSocketClient {
-    rt: Sender<String>,
+    rt: ClientSender,
 }
 
 impl WebSocketClient {
     /// 创建一个新的 WebSocket 客户端
     pub async fn new(url: String) -> Result<Self> {
-        let (rt, rx) = mpsc::channel::<String>(4);
+        let (rt, rx) = mpsc::channel::<ClientEvents>(4);
         let connection = connect(&url, rt.clone()).await?;
         let rt_clone = rt.clone();
         let client = Self { rt: rt_clone };
-        // let mut client_clone = client.clone();
         tokio::spawn(async move {
             let _ = handle_reconnect(url, connection, rx, rt.clone()).await;
         });
         Ok(client)
     }
 
-    /// 发送消息到 WebSocket 服务器
-    pub async fn send_message(&self, msg: String) -> Result<()> {
+    pub async fn send_text_message(&self, msg: String) -> Result<()> {
+        let event = ClientEvents::SendMessage(Message::text(msg));
+        self.send_message(event).await?;
+        Ok(())
+    }
+
+    async fn send_message(&self, event: ClientEvents) -> Result<()> {
         self.rt
-            .send(msg)
+            .send(event)
             .await
             .map_err(|e| Error::ErrorMessage(e.to_string()))?;
         Ok(())
     }
 }
 
-pub async fn connect(url: &str, rt: Sender<String>) -> Result<ClientConnection> {
+async fn connect(url: &str, rt: ClientSender) -> Result<ClientConnection> {
     let (socket, _) = connect_async(url).await?;
     let (socket_writer, socket_reader) = socket.split();
 
-    let (msg_sender, msg_reciever) = mpsc::channel::<String>(4);
+    let (msg_sender, msg_reciever) = mpsc::channel::<Message>(4);
     let (exit_tx_send_msg, exit_rx_send_msg) = mpsc::channel::<()>(1); // 发送消息任务退出通道
     let (exit_tx_ping, exit_rx_ping) = mpsc::channel::<()>(1); // Ping任务退出通道
 
@@ -87,7 +91,7 @@ pub async fn connect(url: &str, rt: Sender<String>) -> Result<ClientConnection> 
 
 async fn receive_message(
     mut socket_reader: SocketReader,
-    rt: Sender<String>,
+    rt: ClientSender,
     exit_tx_send_msg: Sender<()>,
     exit_tx_ping: Sender<()>,
 ) -> Result<()> {
@@ -102,8 +106,8 @@ async fn receive_message(
             Some(Ok(Message::Ping(_))) => {
                 println!("收到 Ping 消息");
             }
-            Some(Ok(Message::Pong(_))) => {
-                println!("收到 Pong 消息");
+            Some(Ok(Message::Pong(m))) => {
+                println!("收到 Pong 消息: {:?}", m);
             }
             Some(Ok(Message::Close(_))) => {
                 println!("连接关闭");
@@ -119,7 +123,7 @@ async fn receive_message(
                 let _ = exit_tx_send_msg.send(()); // 发送退出信号给 handle_send_msg
                 let _ = exit_tx_ping.send(()); // 发送退出信号给 send_ping
                 let _ = rt
-                    .send("reconnect".to_string())
+                    .send(ClientEvents::Reconnect)
                     .await
                     .map_err(|e| Error::ErrorMessage(e.to_string()));
                 break;
@@ -141,7 +145,7 @@ async fn handle_send_msg(
     loop {
         tokio::select! {
             Some(msg) = rx.recv() => {
-                if let Err(e) = writer.send(Message::text(msg)).await {
+                if let Err(e) = writer.send(msg).await {
                     eprintln!("Error sending message: {}", e);
                     return Err(Error::WsError(e));
                 }
@@ -156,7 +160,7 @@ async fn handle_send_msg(
 }
 
 async fn send_ping(
-    msg_sender: super::MsgSender,
+    msg_sender: MsgSender,
     interval: Duration,
     mut exit_rx: Receiver<()>,
 ) -> Result<()> {
@@ -166,7 +170,7 @@ async fn send_ping(
         tokio::select! {
             _ = interval_timer.tick() => {
                 msg_sender
-                    .send("ping".to_string())
+                    .send(Message::Ping("ping".into()))
                     .await
                     .map_err(|e| Error::ErrorMessage(e.to_string()))?;
             }
@@ -182,24 +186,33 @@ async fn send_ping(
 async fn handle_reconnect(
     url: String,
     mut connection: ClientConnection,
-    mut rx: Receiver<String>,
-    rt: Sender<String>,
+    mut rx: ClientReciver,
+    rt: ClientSender,
 ) -> Result<()> {
-    while let Some(msg) = rx.recv().await {
-        if msg == "reconnect" {
-            connection = reconnect(&url, rt.clone()).await?;
-        } else {
-            connection
-                .msg_sender
-                .send(msg)
-                .await
-                .map_err(|e| Error::ErrorMessage(e.to_string()))?;
+    loop {
+        match rx.recv().await {
+            Some(ClientEvents::Reconnect) => {
+                // 重连并更新 connection
+                connection = reconnect(&url, rt.clone()).await?;
+            }
+            Some(ClientEvents::SendMessage(msg)) => {
+                // 发送消息
+                connection
+                    .msg_sender
+                    .send(msg)
+                    .await
+                    .map_err(|e| Error::ErrorMessage(e.to_string()))?;
+            }
+            None => {
+                // 如果没有更多消息，可以选择退出或处理其他逻辑
+                break;
+            }
         }
     }
     Ok(())
 }
 
-async fn reconnect(url: &str, rt: Sender<String>) -> Result<ClientConnection> {
+async fn reconnect(url: &str, rt: ClientSender) -> Result<ClientConnection> {
     let mut retries = 5; // 最大重连次数
     while retries > 0 {
         match connect(url, rt.clone()).await {
