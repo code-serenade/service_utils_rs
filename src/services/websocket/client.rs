@@ -80,7 +80,7 @@ async fn connect(url: &str, rt: ClientSender) -> Result<ClientConnection> {
     // 启动 Ping 任务，传递退出通道
     tokio::spawn(send_ping(
         msg_sender.clone(),
-        Duration::from_secs(10),
+        Duration::from_secs(30),
         exit_rx_ping,
     ));
 
@@ -165,7 +165,6 @@ async fn send_ping(
     mut exit_rx: Receiver<()>,
 ) -> Result<()> {
     let mut interval_timer = time::interval(interval);
-
     loop {
         tokio::select! {
             _ = interval_timer.tick() => {
