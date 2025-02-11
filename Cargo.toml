@@ -11,18 +11,20 @@ documentation = "https://docs.rs/service_utils_rs"
 
 [dependencies]
 byteorder = "1.5.0"
-bytes = "1.7.1"
+bytes = "1.10.0"
 chrono = "0.4.38"
-config = "0.15.5"
+config = "0.15.7"
+futures = "0.3.30"
 futures-util = "0.3.30"
-jsonwebtoken = { version = "9.3.0", optional = true }
+jsonwebtoken = { version = "9.3.1", optional = true }
 serde = { version = "1.0.204", features = ["derive"] }
 thiserror = "2.0.11"
 tokio = { version = "1", features = ["full"] }
 tokio-tungstenite = "0.26"
 reqwest = { version = "0.12.12", features = ["json"] }
 url = "2.2"
-serde_json = "1.0"
+serde_json = "1.0.138"
+
 
 [features]
 jwt = ["jsonwebtoken"]
