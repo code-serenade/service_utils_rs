@@ -50,6 +50,41 @@ impl WebSocketClient {
     }
 }
 
+pub async fn connect(url: &str, rt: Sender<String>) -> Result<ClientConnection> {
+    let (socket, _) = connect_async(url).await?;
+    let (socket_writer, socket_reader) = socket.split();
+
+    let (msg_sender, msg_reciever) = mpsc::channel::<String>(4);
+    let (exit_tx_send_msg, exit_rx_send_msg) = mpsc::channel::<()>(1); // 发送消息任务退出通道
+    let (exit_tx_ping, exit_rx_ping) = mpsc::channel::<()>(1); // Ping任务退出通道
+
+    // 启动接收消息任务
+    tokio::spawn(receive_message(
+        socket_reader,
+        rt.clone(),
+        exit_tx_send_msg.clone(),
+        exit_tx_ping.clone(),
+    ));
+
+    // 启动发送消息任务，传递退出通道
+    tokio::spawn(handle_send_msg(
+        msg_reciever,
+        socket_writer,
+        exit_rx_send_msg,
+    ));
+
+    // 启动 Ping 任务，传递退出通道
+    tokio::spawn(send_ping(
+        msg_sender.clone(),
+        Duration::from_secs(10),
+        exit_rx_ping,
+    ));
+
+    let connection = ClientConnection { msg_sender };
+    println!("成功连接到 WebSocket 服务器");
+    Ok(connection)
+}
+
 async fn receive_message(
     mut socket_reader: SocketReader,
     rt: Sender<String>,
@@ -96,41 +131,6 @@ async fn receive_message(
         }
     }
     Ok(())
-}
-
-pub async fn connect(url: &str, rt: Sender<String>) -> Result<ClientConnection> {
-    let (socket, _) = connect_async(url).await?;
-    let (socket_writer, socket_reader) = socket.split();
-
-    let (msg_sender, msg_reciever) = mpsc::channel::<String>(4);
-    let (exit_tx_send_msg, exit_rx_send_msg) = mpsc::channel::<()>(1); // 发送消息任务退出通道
-    let (exit_tx_ping, exit_rx_ping) = mpsc::channel::<()>(1); // Ping任务退出通道
-
-    // 启动接收消息任务
-    tokio::spawn(receive_message(
-        socket_reader,
-        rt.clone(),
-        exit_tx_send_msg.clone(),
-        exit_tx_ping.clone(),
-    ));
-
-    // 启动发送消息任务，传递退出通道
-    tokio::spawn(handle_send_msg(
-        msg_reciever,
-        socket_writer,
-        exit_rx_send_msg,
-    ));
-
-    // 启动 Ping 任务，传递退出通道
-    tokio::spawn(send_ping(
-        msg_sender.clone(),
-        Duration::from_secs(10),
-        exit_rx_ping,
-    ));
-
-    let connection = ClientConnection { msg_sender };
-    println!("成功连接到 WebSocket 服务器");
-    Ok(connection)
 }
 
 async fn handle_send_msg(
