@@ -1,7 +1,4 @@
-use crate::{
-    error::{Error, Result},
-    services::websocket::client_router::IncomingMessage,
-};
+use crate::error::{Error, Result};
 use futures::{
     stream::{SplitSink, SplitStream},
     SinkExt, StreamExt,
@@ -13,11 +10,11 @@ use tokio::{
     sync::mpsc::{self, Receiver, Sender},
     time,
 };
-use tokio_tungstenite::{connect_async, tungstenite::Message, MaybeTlsStream, WebSocketStream};
+use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
 
 use super::{
-    client_router::Router, connection::ClientConnection, ClientEvents, ClientReciver, ClientSender,
-    MsgReciver, MsgSender,
+    connection::ClientConnection, ClientEvents, ClientReciver, ClientSender, Message, MsgReciver,
+    MsgSender,
 };
 
 type SocketReader = SplitStream<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>>;
@@ -31,21 +28,15 @@ pub struct WebSocketClient {
 
 impl WebSocketClient {
     /// 创建一个新的 WebSocket 客户端
-    pub async fn new(url: String, router: Router) -> Result<Self> {
+    pub async fn new(url: String) -> Result<Self> {
         let (rt, rx) = mpsc::channel::<ClientEvents>(4);
+        let connection = connect(&url, rt.clone()).await?;
         let rt_clone = rt.clone();
         let client = Self { rt: rt_clone };
         tokio::spawn(async move {
-            let _ = handle_reconnect(url, rx, rt.clone(), router).await;
+            let _ = handle_reconnect(url, connection, rx, rt.clone()).await;
         });
         Ok(client)
-    }
-
-    pub async fn send_json_message(&self, msg: IncomingMessage) -> Result<()> {
-        let bin = serde_json::to_vec(&msg).map_err(|e| Error::ErrorMessage(e.to_string()))?;
-        let event = ClientEvents::SendMessage(Message::binary(bin));
-        self.send_message(event).await?;
-        Ok(())
     }
 
     pub async fn send_text_message(&self, msg: String) -> Result<()> {
@@ -63,7 +54,7 @@ impl WebSocketClient {
     }
 }
 
-async fn connect(url: &str, rt: ClientSender, router: &Router) -> Result<ClientConnection> {
+async fn connect(url: &str, rt: ClientSender) -> Result<ClientConnection> {
     let (socket, _) = connect_async(url).await?;
     let (socket_writer, socket_reader) = socket.split();
 
@@ -77,7 +68,6 @@ async fn connect(url: &str, rt: ClientSender, router: &Router) -> Result<ClientC
         rt.clone(),
         exit_tx_send_msg.clone(),
         exit_tx_ping.clone(),
-        router.clone(),
     ));
 
     // 启动发送消息任务，传递退出通道
@@ -104,18 +94,13 @@ async fn receive_message(
     rt: ClientSender,
     exit_tx_send_msg: Sender<()>,
     exit_tx_ping: Sender<()>,
-    router: Router,
 ) -> Result<()> {
     loop {
         match socket_reader.next().await {
             Some(Ok(Message::Text(text))) => {
                 println!("收到消息: {}", text);
             }
-            Some(Ok(Message::Binary(bin))) => {
-                let parsed_msg: IncomingMessage =
-                    serde_json::from_slice(&bin).map_err(|e| Error::ErrorMessage(e.to_string()))?;
-                router.handle(&parsed_msg.action, parsed_msg.data);
-
+            Some(Ok(Message::Binary(_))) => {
                 println!("收到二进制消息");
             }
             Some(Ok(Message::Ping(_))) => {
@@ -199,16 +184,15 @@ async fn send_ping(
 
 async fn handle_reconnect(
     url: String,
+    mut connection: ClientConnection,
     mut rx: ClientReciver,
     rt: ClientSender,
-    router: Router,
 ) -> Result<()> {
-    let mut connection: ClientConnection = connect(&url, rt.clone(), &router).await?;
     loop {
         match rx.recv().await {
             Some(ClientEvents::Reconnect) => {
                 // 重连并更新 connection
-                connection = reconnect(&url, rt.clone(), &router).await?;
+                connection = reconnect(&url, rt.clone()).await?;
             }
             Some(ClientEvents::SendMessage(msg)) => {
                 // 发送消息
@@ -227,10 +211,10 @@ async fn handle_reconnect(
     Ok(())
 }
 
-async fn reconnect(url: &str, rt: ClientSender, router: &Router) -> Result<ClientConnection> {
+async fn reconnect(url: &str, rt: ClientSender) -> Result<ClientConnection> {
     let mut retries = 5; // 最大重连次数
     while retries > 0 {
-        match connect(url, rt.clone(), router).await {
+        match connect(url, rt.clone()).await {
             Ok(connection) => {
                 println!("重连成功");
                 return Ok(connection); // 成功重连后返回

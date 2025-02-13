@@ -1,5 +1,7 @@
 pub mod client;
+pub mod client_router;
 pub mod connection;
+pub mod handler;
 pub mod server;
 
 enum ClientEvents {
