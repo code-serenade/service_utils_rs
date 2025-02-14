@@ -1,8 +1,8 @@
-pub mod connection;
 pub mod error_code;
 pub mod events;
 pub mod header_parser;
 pub mod manager;
+pub mod server_connection;
 pub mod server_router;
 
 use crate::error::Result;
@@ -56,7 +56,7 @@ where
             Err(e) => println!("Websocket connection error : {}", e),
             Ok(ws_stream) => {
                 println!("New client addr: {}", client_addr);
-                tokio::spawn(connection::handle_connection(
+                tokio::spawn(server_connection::handle_connection(
                     router.clone(),
                     ws_stream,
                     sender.clone(),

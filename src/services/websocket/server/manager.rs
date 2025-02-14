@@ -1,7 +1,7 @@
 use super::{
-    connection::Connection,
     error_code::{SUCCECE, SYSTEM_ERROR},
     events::SocketEvents,
+    server_connection::Connection,
 };
 use crate::{
     error::{Error, Result},

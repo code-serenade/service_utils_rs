@@ -1,8 +1,10 @@
+mod client_connection;
 pub mod client_router;
 
-use super::{connection::ClientConnection, JsonMessage, MsgReciver, MsgSender};
+use super::{JsonMessage, MsgReciver, MsgSender};
 use crate::error::{Error, Result};
 
+use client_connection::ClientConnection;
 use client_router::ClientRouter;
 use futures::{
     stream::{SplitSink, SplitStream},

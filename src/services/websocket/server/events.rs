@@ -1,4 +1,4 @@
-use super::connection::Connection;
+use super::server_connection::Connection;
 use crate::services::websocket::Message;
 use tokio::sync::oneshot::Sender;
 
