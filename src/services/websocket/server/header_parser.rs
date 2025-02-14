@@ -32,7 +32,7 @@ where
     ///
     /// # Example
     /// ```
-    /// use rusido::websocket::header_parser::HeaderParser;
+    /// use service_utils_rs::services::websocket::server::header_parser::HeaderParser;
     ///
     /// let data = vec![1u16, 2u16, 3u16];
     /// let header = data.parse_header();
