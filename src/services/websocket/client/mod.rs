@@ -1,12 +1,12 @@
 pub mod client_router;
 
+use super::{connection::ClientConnection, MsgReciver, MsgSender};
 use crate::error::{Error, Result};
 use client_router::{IncomingMessage, Router};
 use futures::{
     stream::{SplitSink, SplitStream},
     SinkExt, StreamExt,
 };
-
 use std::time::Duration;
 use tokio::{
     net::TcpStream,
@@ -15,12 +15,15 @@ use tokio::{
 };
 use tokio_tungstenite::{connect_async, tungstenite::Message, MaybeTlsStream, WebSocketStream};
 
-use super::{
-    connection::ClientConnection, ClientEvents, ClientReciver, ClientSender, MsgReciver, MsgSender,
-};
-
 type SocketReader = SplitStream<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>>;
 type SocketWriter = SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>;
+type ClientSender = tokio::sync::mpsc::Sender<ClientEvents>;
+type ClientReciver = tokio::sync::mpsc::Receiver<ClientEvents>;
+
+enum ClientEvents {
+    Reconnect,
+    SendMessage(Message),
+}
 /// Alias for the reading half of a WebSocket connection.
 
 /// WebSocket 客户端结构体
