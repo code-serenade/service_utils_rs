@@ -11,7 +11,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let url = "ws://192.168.110.177:13785".to_string();
     let mut router = Router::new();
     router.add("test".to_string(), hh);
-    let client = WebSocketClient::new(url, router).await?;
+    let r = Arc::new(router);
+    let client = WebSocketClient::new(url, r).await?;
     let c = Arc::new(client);
 
     // 发送一个消息到 WebSocket 服务器

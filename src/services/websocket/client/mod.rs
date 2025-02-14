@@ -7,7 +7,7 @@ use futures::{
     stream::{SplitSink, SplitStream},
     SinkExt, StreamExt,
 };
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 use tokio::{
     net::TcpStream,
     sync::mpsc::{self, Receiver, Sender},
@@ -33,7 +33,7 @@ pub struct WebSocketClient {
 
 impl WebSocketClient {
     /// 创建一个新的 WebSocket 客户端
-    pub async fn new(url: String, router: Router) -> Result<Self> {
+    pub async fn new(url: String, router: Arc<Router>) -> Result<Self> {
         let (rt, rx) = mpsc::channel::<ClientEvents>(4);
         let rt_clone = rt.clone();
         let client = Self { rt: rt_clone };
@@ -203,7 +203,7 @@ async fn handle_reconnect(
     url: String,
     mut rx: ClientReciver,
     rt: ClientSender,
-    router: Router,
+    router: Arc<Router>,
 ) -> Result<()> {
     let mut connection: ClientConnection = connect(&url, rt.clone(), &router).await?;
     loop {
