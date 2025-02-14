@@ -12,6 +12,7 @@ pub enum Error {
     #[error("JWT error: {0}")]
     JwtError(#[from] jsonwebtoken::errors::Error),
 
+    #[cfg(feature = "websocket")]
     #[error("websocket error: {0}")]
     WsError(#[from] tokio_tungstenite::tungstenite::Error),
 

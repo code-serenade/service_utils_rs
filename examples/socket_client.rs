@@ -55,3 +55,5 @@ async fn hh(data: serde_json::Value) -> Option<JsonMessage> {
 pub struct Test {
     pub name: String,
 }
+
+// cargo run --example socket_client --features websocket

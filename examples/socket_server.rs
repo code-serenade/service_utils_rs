@@ -59,3 +59,5 @@ fn sub_to_id(sub: &str) -> u32 {
         Err(_) => 300,
     }
 }
+
+// cargo run --example socket_server --features full
