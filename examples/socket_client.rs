@@ -1,6 +1,6 @@
-use service_utils_rs::services::websocket::{
-    client::WebSocketClient,
+use service_utils_rs::services::websocket::client::{
     client_router::{IncomingMessage, Router},
+    WebSocketClient,
 };
 use std::{error::Error, sync::Arc};
 use tokio::time::Duration;

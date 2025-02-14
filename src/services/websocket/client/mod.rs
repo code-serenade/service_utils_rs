@@ -1,7 +1,7 @@
-use crate::{
-    error::{Error, Result},
-    services::websocket::client_router::IncomingMessage,
-};
+pub mod client_router;
+
+use crate::error::{Error, Result};
+use client_router::{IncomingMessage, Router};
 use futures::{
     stream::{SplitSink, SplitStream},
     SinkExt, StreamExt,
@@ -16,8 +16,7 @@ use tokio::{
 use tokio_tungstenite::{connect_async, tungstenite::Message, MaybeTlsStream, WebSocketStream};
 
 use super::{
-    client_router::Router, connection::ClientConnection, ClientEvents, ClientReciver, ClientSender,
-    MsgReciver, MsgSender,
+    connection::ClientConnection, ClientEvents, ClientReciver, ClientSender, MsgReciver, MsgSender,
 };
 
 type SocketReader = SplitStream<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>>;
@@ -114,7 +113,7 @@ async fn receive_message(
             Some(Ok(Message::Binary(bin))) => {
                 let parsed_msg: IncomingMessage =
                     serde_json::from_slice(&bin).map_err(|e| Error::ErrorMessage(e.to_string()))?;
-                router.handle(&parsed_msg.action, parsed_msg.data);
+                tokio::spawn(process_message(parsed_msg, rt.clone(), router.clone()));
 
                 println!("收到二进制消息");
             }
@@ -247,4 +246,9 @@ async fn reconnect(url: &str, rt: ClientSender, router: &Router) -> Result<Clien
     Err(Error::ErrorMessage(
         "重连失败，已达最大重试次数".to_string(),
     ))
+}
+
+async fn process_message(msg: IncomingMessage, _rt: ClientSender, router: Router) -> Result<()> {
+    router.handle(&msg.action, msg.data);
+    Ok(())
 }
