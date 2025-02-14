@@ -12,12 +12,10 @@ use server_router::ServerRouter;
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::{net::TcpListener, sync::mpsc::UnboundedSender};
+use tokio_tungstenite::tungstenite::http;
 use tokio_tungstenite::{
     accept_hdr_async,
-    tungstenite::{
-        handshake::server::{Request, Response},
-        http,
-    },
+    tungstenite::handshake::server::{Request, Response},
 };
 
 pub type SocketEventSender = UnboundedSender<SocketEvents>;
@@ -45,9 +43,11 @@ where
                 .and_then(|query| query.extract_value("token").map(|t| t.to_string()))
             {
                 id = token_validator(&token);
+                if id == 0 {
+                    *res.status_mut() = http::StatusCode::UNAUTHORIZED;
+                }
             } else {
-                println!("Token not found");
-                // *res.status_mut() = http::StatusCode::BAD_REQUEST;
+                *res.status_mut() = http::StatusCode::BAD_REQUEST;
             }
             Ok(res)
         };

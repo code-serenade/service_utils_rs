@@ -1,10 +1,7 @@
 use super::{server_router::ServerRouter, SocketEventSender};
 use crate::{
     error::{Error, Result},
-    services::websocket::{
-        server::{events::SocketEvents, server_router::IncomingMessage},
-        MsgReciver, MsgSender,
-    },
+    services::websocket::{server::events::SocketEvents, JsonMessage, MsgReciver, MsgSender},
 };
 
 use futures_util::{
@@ -127,27 +124,25 @@ async fn handle_msg(
                 println!("Received text message: {}", msg);
             }
             Ok(Message::Binary(bin)) => {
-                println!("Received binary message");
-                // if let Err(e) = write.send(Message::Binary(msg)).await {
-                //     eprintln!("Error sending message: {}", e);
-                //     return;
-                // }
+                let parsed_msg: JsonMessage =
+                    serde_json::from_slice(&bin).map_err(|e| Error::ErrorMessage(e.to_string()))?;
+                tokio::spawn(process_message(
+                    parsed_msg,
+                    router.clone(),
+                    tx.clone(),
+                    socket_event_sender.clone(),
+                ));
             }
-            Ok(Message::Ping(ping)) => {
-                println!("Received ping");
-                let pong = Message::Pong(ping);
-                tx.send(pong).await.unwrap();
-            }
-            Ok(Message::Pong(_)) => {
-                println!("Received pong");
-            }
+            Ok(Message::Ping(_ping)) => {}
+            Ok(Message::Pong(_)) => {}
             Ok(Message::Close(_)) => {
-                println!("Client closed the connection");
+                // println!("Client closed the connection");
                 break;
             }
             Ok(Message::Frame(_)) => {
                 println!("Received frame message");
             }
+
             Err(e) => {
                 eprintln!("Error receiving message: {}", e);
                 break;
@@ -168,24 +163,24 @@ async fn handle_msg(
 }
 
 async fn process_message(
-    message: IncomingMessage,
+    message: JsonMessage,
     router: Arc<ServerRouter>,
-    _tx: MsgSender,
+    tx: MsgSender,
     socket_event_sender: SocketEventSender,
-) {
-    router.handle(&message.action, message.data, socket_event_sender)
-
-    // match router.handle_message(message, socket_event_sender).await {
-    //     Ok(response_data) => {
-    //         if let Err(e) = tx.send((0, cmd, Some(response_data))).await {
-    //             eprintln!("Error sending processed message: {}", e);
-    //         }
-    //     }
-    //     Err(_) => {
-    //         let error_code = 1;
-    //         if let Err(e) = tx.send((error_code, cmd, None)).await {
-    //             eprintln!("Error sending processed message: {}", e);
-    //         }
-    //     }
-    // }
+) -> Result<()> {
+    match router
+        .handle_message(&message.action, message.data, socket_event_sender)
+        .await
+    {
+        Some(response) => {
+            let bin =
+                serde_json::to_vec(&response).map_err(|e| Error::ErrorMessage(e.to_string()))?;
+            let message = Message::binary(bin);
+            tx.send(message)
+                .await
+                .map_err(|e| Error::ErrorMessage(e.to_string()))?;
+        }
+        None => {}
+    }
+    Ok(())
 }

@@ -1,12 +1,10 @@
 use std::sync::Arc;
 
-use bytes::BytesMut;
-
 use service_utils_rs::error::Result;
 
-use service_utils_rs::services::websocket;
 use service_utils_rs::services::websocket::server::server_router::ServerRouter;
 use service_utils_rs::services::websocket::server::SocketEventSender;
+use service_utils_rs::services::websocket::{self, JsonMessage};
 use service_utils_rs::{services::jwt::Jwt, settings::Settings};
 
 #[tokio::main]
@@ -31,26 +29,28 @@ async fn main() -> Result<()> {
 }
 
 fn init_router() -> ServerRouter {
-    let router = ServerRouter::new();
-    // router
-    //     .add_route(1001, handle_user_info)
-    //     .add_route(1002, handle_order);
+    let mut router = ServerRouter::new();
+    router
+        .add_route("test1", handle_user_info)
+        .add_route("test", handle_order);
     router
 }
 
-async fn handle_user_info(data: BytesMut, _tx: SocketEventSender) -> Result<BytesMut> {
+async fn handle_user_info(data: serde_json::Value, _tx: SocketEventSender) -> Option<JsonMessage> {
     // todo others
     println!("data: {:?}", data);
-    let response = BytesMut::from("User Info: John Doe");
-    Ok(response)
+    // let response = BytesMut::from("User Info: John Doe");
+    None
 }
 
 // 定义另一个处理函数
-async fn handle_order(data: BytesMut, _tx: SocketEventSender) -> Result<BytesMut> {
-    // todo others
-    println!("data: {:?}", data);
-    let response = BytesMut::from("Order: #12345");
-    Ok(response)
+async fn handle_order(data: serde_json::Value, _tx: SocketEventSender) -> Option<JsonMessage> {
+    let msg = JsonMessage {
+        action: "test".to_string(),
+        data: serde_json::json!({"name": "test"}),
+    };
+    println!("got order: {:?}", data);
+    Some(msg)
 }
 
 fn sub_to_id(sub: &str) -> u32 {
