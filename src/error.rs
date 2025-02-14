@@ -33,6 +33,9 @@ pub enum Error {
 
     #[error("error code: {0}")]
     ErrorCode(u16),
+
+    #[error("system error: {0}")]
+    SystemError(String),
 }
 
 pub type Result<T, E = Error> = core::result::Result<T, E>;

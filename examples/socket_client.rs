@@ -8,7 +8,7 @@ use tokio::time::Duration;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     // 初始化 WebSocket 客户端并连接到服务器
-    let url = "ws://192.168.110.177:13785".to_string();
+    let url = "ws://192.168.110.177:10031".to_string();
     let mut router = Router::new();
     router.add("test".to_string(), hh);
     let r = Arc::new(router);

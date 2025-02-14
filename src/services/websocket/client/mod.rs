@@ -28,17 +28,17 @@ enum ClientEvents {
 
 /// WebSocket 客户端结构体
 pub struct WebSocketClient {
-    rt: ClientSender,
+    tx: ClientSender,
 }
 
 impl WebSocketClient {
     /// 创建一个新的 WebSocket 客户端
     pub async fn new(url: String, router: Arc<Router>) -> Result<Self> {
-        let (rt, rx) = mpsc::channel::<ClientEvents>(4);
-        let rt_clone = rt.clone();
-        let client = Self { rt: rt_clone };
+        let (tx, rx) = mpsc::channel::<ClientEvents>(4);
+        let tx_clone = tx.clone();
+        let client = Self { tx: tx_clone };
         tokio::spawn(async move {
-            let _ = handle_reconnect(url, rx, rt.clone(), router).await;
+            let _ = handle_reconnect(url, rx, tx.clone(), router).await;
         });
         Ok(client)
     }
@@ -57,7 +57,7 @@ impl WebSocketClient {
     }
 
     async fn send_message(&self, event: ClientEvents) -> Result<()> {
-        self.rt
+        self.tx
             .send(event)
             .await
             .map_err(|e| Error::ErrorMessage(e.to_string()))?;
@@ -65,7 +65,7 @@ impl WebSocketClient {
     }
 }
 
-async fn connect(url: &str, rt: ClientSender, router: &Router) -> Result<ClientConnection> {
+async fn connect(url: &str, tx: ClientSender, router: &Router) -> Result<ClientConnection> {
     let (socket, _) = connect_async(url).await?;
     let (socket_writer, socket_reader) = socket.split();
 
@@ -76,7 +76,7 @@ async fn connect(url: &str, rt: ClientSender, router: &Router) -> Result<ClientC
     // 启动接收消息任务
     tokio::spawn(receive_message(
         socket_reader,
-        rt.clone(),
+        tx.clone(),
         exit_tx_send_msg.clone(),
         exit_tx_ping.clone(),
         router.clone(),
@@ -103,7 +103,7 @@ async fn connect(url: &str, rt: ClientSender, router: &Router) -> Result<ClientC
 
 async fn receive_message(
     mut socket_reader: SocketReader,
-    rt: ClientSender,
+    tx: ClientSender,
     exit_tx_send_msg: Sender<()>,
     exit_tx_ping: Sender<()>,
     router: Router,
@@ -116,7 +116,7 @@ async fn receive_message(
             Some(Ok(Message::Binary(bin))) => {
                 let parsed_msg: IncomingMessage =
                     serde_json::from_slice(&bin).map_err(|e| Error::ErrorMessage(e.to_string()))?;
-                tokio::spawn(process_message(parsed_msg, rt.clone(), router.clone()));
+                tokio::spawn(process_message(parsed_msg, tx.clone(), router.clone()));
 
                 println!("收到二进制消息");
             }
@@ -139,7 +139,7 @@ async fn receive_message(
                 // 发送退出信号，通知其他进程退出
                 let _ = exit_tx_send_msg.send(()); // 发送退出信号给 handle_send_msg
                 let _ = exit_tx_ping.send(()); // 发送退出信号给 send_ping
-                let _ = rt
+                let _ = tx
                     .send(ClientEvents::Reconnect)
                     .await
                     .map_err(|e| Error::ErrorMessage(e.to_string()));
@@ -202,15 +202,15 @@ async fn send_ping(
 async fn handle_reconnect(
     url: String,
     mut rx: ClientReciver,
-    rt: ClientSender,
+    tx: ClientSender,
     router: Arc<Router>,
 ) -> Result<()> {
-    let mut connection: ClientConnection = connect(&url, rt.clone(), &router).await?;
+    let mut connection: ClientConnection = connect(&url, tx.clone(), &router).await?;
     loop {
         match rx.recv().await {
             Some(ClientEvents::Reconnect) => {
                 // 重连并更新 connection
-                connection = reconnect(&url, rt.clone(), &router).await?;
+                connection = reconnect(&url, tx.clone(), &router).await?;
             }
             Some(ClientEvents::SendMessage(msg)) => {
                 // 发送消息
@@ -229,10 +229,10 @@ async fn handle_reconnect(
     Ok(())
 }
 
-async fn reconnect(url: &str, rt: ClientSender, router: &Router) -> Result<ClientConnection> {
+async fn reconnect(url: &str, tx: ClientSender, router: &Router) -> Result<ClientConnection> {
     let mut retries = 5; // 最大重连次数
     while retries > 0 {
-        match connect(url, rt.clone(), router).await {
+        match connect(url, tx.clone(), router).await {
             Ok(connection) => {
                 println!("重连成功");
                 return Ok(connection); // 成功重连后返回
@@ -251,7 +251,7 @@ async fn reconnect(url: &str, rt: ClientSender, router: &Router) -> Result<Clien
     ))
 }
 
-async fn process_message(msg: IncomingMessage, _rt: ClientSender, router: Router) -> Result<()> {
+async fn process_message(msg: IncomingMessage, _tx: ClientSender, router: Router) -> Result<()> {
     router.handle(&msg.action, msg.data);
     Ok(())
 }
