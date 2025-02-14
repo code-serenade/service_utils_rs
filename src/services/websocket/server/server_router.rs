@@ -56,6 +56,7 @@ impl ServerRouter {
         if let Some(handler) = self.routes.get(action) {
             handler.call(data, tx).await
         } else {
+            eprintln!("Unknown action: {}", action);
             None
         }
     }

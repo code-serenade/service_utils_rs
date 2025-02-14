@@ -1,8 +1,9 @@
 pub mod client_router;
 
-use super::{connection::ClientConnection, MsgReciver, MsgSender};
+use super::{connection::ClientConnection, JsonMessage, MsgReciver, MsgSender};
 use crate::error::{Error, Result};
-use client_router::{IncomingMessage, Router};
+
+use client_router::ClientRouter;
 use futures::{
     stream::{SplitSink, SplitStream},
     SinkExt, StreamExt,
@@ -33,17 +34,17 @@ pub struct WebSocketClient {
 
 impl WebSocketClient {
     /// 创建一个新的 WebSocket 客户端
-    pub async fn new(url: String, router: Arc<Router>) -> Result<Self> {
+    pub async fn new(url: String, router: Arc<ClientRouter>) -> Result<Self> {
         let (tx, rx) = mpsc::channel::<ClientEvents>(4);
         let tx_clone = tx.clone();
         let client = Self { tx: tx_clone };
         tokio::spawn(async move {
-            let _ = handle_reconnect(url, rx, tx.clone(), router).await;
+            let _ = handle_reconnect(url, rx, tx.clone(), router.clone()).await;
         });
         Ok(client)
     }
 
-    pub async fn send_json_message(&self, msg: IncomingMessage) -> Result<()> {
+    pub async fn send_json_message(&self, msg: JsonMessage) -> Result<()> {
         let bin = serde_json::to_vec(&msg).map_err(|e| Error::ErrorMessage(e.to_string()))?;
         let event = ClientEvents::SendMessage(Message::binary(bin));
         self.send_message(event).await?;
@@ -65,7 +66,11 @@ impl WebSocketClient {
     }
 }
 
-async fn connect(url: &str, tx: ClientSender, router: &Router) -> Result<ClientConnection> {
+async fn connect(
+    url: &str,
+    tx: ClientSender,
+    router: Arc<ClientRouter>,
+) -> Result<ClientConnection> {
     let (socket, _) = connect_async(url).await?;
     let (socket_writer, socket_reader) = socket.split();
 
@@ -106,7 +111,7 @@ async fn receive_message(
     tx: ClientSender,
     exit_tx_send_msg: Sender<()>,
     exit_tx_ping: Sender<()>,
-    router: Router,
+    router: Arc<ClientRouter>,
 ) -> Result<()> {
     loop {
         match socket_reader.next().await {
@@ -114,7 +119,7 @@ async fn receive_message(
                 println!("收到消息: {}", text);
             }
             Some(Ok(Message::Binary(bin))) => {
-                let parsed_msg: IncomingMessage =
+                let parsed_msg: JsonMessage =
                     serde_json::from_slice(&bin).map_err(|e| Error::ErrorMessage(e.to_string()))?;
                 tokio::spawn(process_message(parsed_msg, tx.clone(), router.clone()));
 
@@ -203,14 +208,14 @@ async fn handle_reconnect(
     url: String,
     mut rx: ClientReciver,
     tx: ClientSender,
-    router: Arc<Router>,
+    router: Arc<ClientRouter>,
 ) -> Result<()> {
-    let mut connection: ClientConnection = connect(&url, tx.clone(), &router).await?;
+    let mut connection: ClientConnection = connect(&url, tx.clone(), router.clone()).await?;
     loop {
         match rx.recv().await {
             Some(ClientEvents::Reconnect) => {
                 // 重连并更新 connection
-                connection = reconnect(&url, tx.clone(), &router).await?;
+                connection = reconnect(&url, tx.clone(), router.clone()).await?;
             }
             Some(ClientEvents::SendMessage(msg)) => {
                 // 发送消息
@@ -229,10 +234,14 @@ async fn handle_reconnect(
     Ok(())
 }
 
-async fn reconnect(url: &str, tx: ClientSender, router: &Router) -> Result<ClientConnection> {
+async fn reconnect(
+    url: &str,
+    tx: ClientSender,
+    router: Arc<ClientRouter>,
+) -> Result<ClientConnection> {
     let mut retries = 5; // 最大重连次数
     while retries > 0 {
-        match connect(url, tx.clone(), router).await {
+        match connect(url, tx.clone(), router.clone()).await {
             Ok(connection) => {
                 println!("重连成功");
                 return Ok(connection); // 成功重连后返回
@@ -251,7 +260,21 @@ async fn reconnect(url: &str, tx: ClientSender, router: &Router) -> Result<Clien
     ))
 }
 
-async fn process_message(msg: IncomingMessage, _tx: ClientSender, router: Router) -> Result<()> {
-    router.handle(&msg.action, msg.data);
+async fn process_message(
+    msg: JsonMessage,
+    tx: ClientSender,
+    router: Arc<ClientRouter>,
+) -> Result<()> {
+    match router.handle_message(&msg.action, msg.data).await {
+        Some(message) => {
+            let bin =
+                serde_json::to_vec(&message).map_err(|e| Error::ErrorMessage(e.to_string()))?;
+            let event = ClientEvents::SendMessage(Message::binary(bin));
+            tx.send(event)
+                .await
+                .map_err(|e| Error::ErrorMessage(e.to_string()))?;
+        }
+        None => (),
+    }
     Ok(())
 }

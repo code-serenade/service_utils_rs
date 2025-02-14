@@ -1,56 +1,58 @@
+use crate::services::websocket::JsonMessage;
 use std::collections::HashMap;
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
 
-use serde::{Deserialize, Serialize};
-
-pub struct Router {
-    handlers: HashMap<String, Arc<dyn Fn(serde_json::Value) + Send + Sync>>,
+pub trait Handler {
+    fn call(
+        &self,
+        data: serde_json::Value,
+    ) -> Pin<Box<dyn Future<Output = Option<JsonMessage>> + Send>>;
 }
 
-impl Router {
+impl<F, Fut> Handler for F
+where
+    F: Fn(serde_json::Value) -> Fut + Send + Sync + 'static,
+    Fut: Future<Output = Option<JsonMessage>> + Send + 'static,
+{
+    fn call(
+        &self,
+        data: serde_json::Value,
+    ) -> Pin<Box<dyn Future<Output = Option<JsonMessage>> + Send>> {
+        Box::pin((self)(data))
+    }
+}
+
+pub struct ClientRouter {
+    routes: HashMap<&'static str, Arc<dyn Handler + Send + Sync>>,
+}
+
+impl ClientRouter {
     pub fn new() -> Self {
-        Router {
-            handlers: HashMap::new(),
+        Self {
+            routes: HashMap::new(),
         }
     }
 
-    // 注册处理函数
-    pub fn add<F>(&mut self, route: String, handler: F)
+    pub fn add_route<H>(&mut self, action: &'static str, handler: H) -> &mut Self
     where
-        F: Fn(serde_json::Value) + Send + Sync + 'static,
+        H: Handler + Send + Sync + 'static,
     {
-        self.handlers.insert(route, Arc::new(handler));
+        self.routes.insert(action, Arc::new(handler));
+        self
     }
 
-    // 通过 action 字段进行路由处理
-    pub fn handle(&self, action: &str, data: serde_json::Value) {
-        if let Some(handler) = self.handlers.get(action) {
-            handler(data);
+    pub async fn handle_message(
+        &self,
+        action: &str,
+        data: serde_json::Value,
+    ) -> Option<JsonMessage> {
+        if let Some(handler) = self.routes.get(action) {
+            handler.call(data).await
         } else {
-            unknown_handler(action, data);
+            eprintln!("Unknown action: {}", action);
+            None
         }
     }
-}
-
-fn unknown_handler(action: &str, data: serde_json::Value) {
-    println!("Unknown action: {}", action);
-    println!("Data: {}", data);
-}
-
-impl Clone for Router {
-    fn clone(&self) -> Self {
-        let handlers = self
-            .handlers
-            .iter()
-            .map(|(route, handler)| (route.clone(), Arc::clone(handler)))
-            .collect::<HashMap<String, Arc<dyn Fn(serde_json::Value) + Send + Sync>>>();
-
-        Router { handlers }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct IncomingMessage {
-    pub action: String,
-    pub data: serde_json::Value,
 }
