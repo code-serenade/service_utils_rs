@@ -15,7 +15,7 @@ Add the following dependency to your `Cargo.toml` file:
 
 ```toml
 [dependencies]
-service_utils_rs = "0.1.3"
+service_utils_rs = "0.3.0"
 ```
 
 ## Usage
@@ -33,7 +33,7 @@ access_secret = "3a5df12e1fc87ad045e1767e3f6a285da64139de0199f3d7b1d869f03d8eae3
 refresh_secret = "b26f570b5d72795815f898cea04a4234a932cded824081767698e58e13ff849f3b6e23fe34efb4f6d78e342f1be4eace18135994e51a070c605c6dc9698a5fab"
 audience = "test"
 access_token_duration = 86400
-refresh_token_duration = 172800    
+refresh_token_duration = 172800
 ```
 
 #### 2. Settings Module
