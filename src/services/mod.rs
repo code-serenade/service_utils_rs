@@ -7,4 +7,5 @@ pub mod db;
 #[cfg(feature = "websocket")]
 pub mod websocket;
 
+#[cfg(feature = "http")]
 pub mod http;

@@ -16,6 +16,7 @@ pub enum Error {
     #[error("websocket error: {0}")]
     WsError(#[from] tokio_tungstenite::tungstenite::Error),
 
+    #[cfg(feature = "http")]
     #[error("request error: {0}")]
     RequestError(#[from] reqwest::Error),
 

@@ -3,15 +3,18 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct Settings {
+    #[cfg(feature = "jwt")]
     pub jwt: JwtCfg,
     #[cfg(feature = "db")]
     pub surrealdb: SurrealdbCfg,
     #[cfg(feature = "websocket")]
     pub websocket: WebsocketCfg,
+    #[cfg(feature = "http")]
     pub http: HttpCfg,
 }
 
 /// Struct representing the JWT configuration parameters.
+#[cfg(feature = "jwt")]
 #[derive(Debug, Deserialize)]
 pub struct JwtCfg {
     pub access_secret: String,
@@ -42,6 +45,8 @@ pub struct WebsocketCfg {
     pub port: u16,
 }
 
+/// Struct representing the http server configuration parameters.
+#[cfg(feature = "http")]
 #[derive(Debug, Deserialize)]
 pub struct HttpCfg {
     pub port: u16,

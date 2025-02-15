@@ -46,4 +46,4 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-// cargo run --example http_example
+// cargo run --example http_example --features http
