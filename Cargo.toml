@@ -20,19 +20,19 @@ jsonwebtoken = { version = "9.3.1", optional = true }
 serde = { version = "1.0.204", features = ["derive"] }
 thiserror = "2.0.11"
 tokio = { version = "1", features = ["full"] }
-tokio-tungstenite = { version = "0.26", optional = true}
+tokio-tungstenite = { version = "0.26", optional = true }
 reqwest = { version = "0.12.12", features = ["json"] }
 url = "2.2"
 serde_json = "1.0.138"
+surrealdb = { version = "2", optional = true }
 
 
 [features]
 jwt = ["jsonwebtoken"]
 websocket = ["tokio-tungstenite"]
+db = ["surrealdb"]
 
-full = ["jwt", "websocket"]
+full = ["jwt", "websocket", "db"]
 
 [package.metadata.docs.rs]
-features = ["jwt", "websocket"]
-
-
+features = ["jwt", "websocket", "db"]

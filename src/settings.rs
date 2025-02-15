@@ -4,6 +4,10 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize)]
 pub struct Settings {
     pub jwt: JwtCfg,
+    #[cfg(feature = "db")]
+    pub surrealdb: SurrealdbCfg,
+    #[cfg(feature = "websocket")]
+    pub websocket: WebsocketCfg,
 }
 
 /// Struct representing the JWT configuration parameters.
@@ -16,6 +20,25 @@ pub struct JwtCfg {
     pub refresh_token_duration: usize,
     pub access_key_validate_exp: bool,
     pub refresh_key_validate_exp: bool,
+}
+
+/// Struct representing the Surrealdb configuration parameters.
+#[cfg(feature = "db")]
+#[derive(Debug, Deserialize)]
+pub struct SurrealdbCfg {
+    pub host: String,
+    pub port: u16,
+    pub username: String,
+    pub password: String,
+    pub namespace: String,
+    pub database: String,
+}
+
+/// Struct representing the websocket server configuration parameters.
+#[cfg(feature = "websocket")]
+#[derive(Debug, Deserialize)]
+pub struct WebsocketCfg {
+    pub port: u16,
 }
 
 impl Settings {
