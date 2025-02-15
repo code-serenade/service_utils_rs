@@ -22,6 +22,7 @@ pub enum Error {
     #[error("url error: {0}")]
     UrlError(#[from] url::ParseError),
 
+    #[cfg(feature = "db")]
     #[error("db error: {0}")]
     DbError(#[from] surrealdb::Error),
 
