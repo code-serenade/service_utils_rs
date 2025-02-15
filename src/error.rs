@@ -22,6 +22,9 @@ pub enum Error {
     #[error("url error: {0}")]
     UrlError(#[from] url::ParseError),
 
+    #[error("db error: {0}")]
+    DbError(#[from] surrealdb::Error),
+
     #[error("{message:} ({line:}, {column})")]
     CustomError {
         message: String,

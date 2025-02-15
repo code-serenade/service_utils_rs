@@ -12,8 +12,8 @@ host = "localhost"
 port = 8000
 username = "root"
 password = "root"
-namespace = "auth"
-database = "auth"
+namespace = "dev"
+database = "dev"
 
 [websocket]
 port = 18123

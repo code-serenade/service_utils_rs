@@ -22,7 +22,7 @@ async fn main() -> Result<()> {
         }
     };
 
-    websocket::server::start(10031, router, token_validator)
+    websocket::server::start(settings.websocket.port, router, token_validator)
         .await
         .unwrap();
     Ok(())
