@@ -8,6 +8,7 @@ pub struct Settings {
     pub surrealdb: SurrealdbCfg,
     #[cfg(feature = "websocket")]
     pub websocket: WebsocketCfg,
+    pub http: HttpCfg,
 }
 
 /// Struct representing the JWT configuration parameters.
@@ -38,6 +39,11 @@ pub struct SurrealdbCfg {
 #[cfg(feature = "websocket")]
 #[derive(Debug, Deserialize)]
 pub struct WebsocketCfg {
+    pub port: u16,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct HttpCfg {
     pub port: u16,
 }
 

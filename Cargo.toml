@@ -1,6 +1,6 @@
 [package]
 name = "service_utils_rs"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 authors = ["code-serenade <arthas.you@163.com>"]
 description = "A brief description of your crate"
@@ -25,6 +25,7 @@ reqwest = { version = "0.12.12", features = ["json"] }
 url = "2.2"
 serde_json = "1.0.138"
 surrealdb = { version = "2", optional = true }
+axum = { version = "0.8.1", features = ["macros"] }
 
 
 [features]

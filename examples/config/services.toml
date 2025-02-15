@@ -17,3 +17,6 @@ database = "dev"
 
 [websocket]
 port = 18123
+
+[http]
+port = 18130

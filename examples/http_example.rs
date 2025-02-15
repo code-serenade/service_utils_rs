@@ -1,5 +1,5 @@
 use serde_json::json;
-use service_utils_rs::{error::Result, services::http_client::HttpClient};
+use service_utils_rs::{error::Result, services::http::http_client::HttpClient};
 
 #[tokio::main]
 async fn main() -> Result<()> {
