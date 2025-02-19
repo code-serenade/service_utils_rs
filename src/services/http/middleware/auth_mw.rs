@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::services::jwt::Jwt;
 use axum::{
     extract::Request,
@@ -11,7 +13,7 @@ pub async fn auth(mut req: Request, next: Next) -> Result<Response, StatusCode> 
     let token = parse_token(headers)?;
     let jwt = req
         .extensions()
-        .get::<Jwt>()
+        .get::<Arc<Jwt>>()
         .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
     let claims = jwt
         .validate_access_token(&token)

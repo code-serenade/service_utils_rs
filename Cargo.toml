@@ -1,6 +1,6 @@
 [package]
 name = "service_utils_rs"
-version = "0.3.3"
+version = "0.3.4"
 edition = "2021"
 authors = ["code-serenade <arthas.you@163.com>"]
 description = "A brief description of your crate"
