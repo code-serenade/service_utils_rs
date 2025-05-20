@@ -3,7 +3,7 @@ use service_utils_rs::{error::Result, services::http::http_server, settings::Set
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let settings = Settings::new("examples/config/services.toml").unwrap();
+    let settings = Settings::load("examples/config/services.toml").unwrap();
     let router = Router::new();
     http_server::start(settings.http.port, router)
         .await

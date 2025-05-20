@@ -1,6 +1,8 @@
 use config::{Config, ConfigError};
 use serde::Deserialize;
 
+use crate::{error::Result, utils::load_settings};
+
 #[derive(Debug, Deserialize)]
 pub struct Settings {
     #[cfg(feature = "jwt")]
@@ -53,10 +55,7 @@ pub struct HttpCfg {
 }
 
 impl Settings {
-    pub fn new(config_path: &str) -> Result<Self, ConfigError> {
-        let c = Config::builder()
-            .add_source(config::File::with_name(config_path))
-            .build()?;
-        c.try_deserialize()
+    pub fn load(config_path: &str) -> Result<Self> {
+        load_settings(config_path)
     }
 }

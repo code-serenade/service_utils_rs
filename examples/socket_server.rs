@@ -15,7 +15,7 @@ use service_utils_rs::{
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let settings = Settings::new("examples/config/services.toml").unwrap();
+    let settings = Settings::load("examples/config/services.toml").unwrap();
     let jwt = Jwt::new(settings.jwt);
 
     let router = init_router();

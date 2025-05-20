@@ -1,7 +1,7 @@
 use service_utils_rs::{error::Result, services::jwt::Jwt, settings::Settings};
 
 fn main() -> Result<()> {
-    let settings = Settings::new("examples/config/services.toml").unwrap();
+    let settings = Settings::load("examples/config/services.toml").unwrap();
     println!("{:?}", settings);
 
     let jwt = Jwt::new(settings.jwt);
