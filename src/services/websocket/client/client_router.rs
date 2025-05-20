@@ -1,8 +1,6 @@
+use std::{collections::HashMap, future::Future, pin::Pin, sync::Arc};
+
 use crate::services::websocket::JsonMessage;
-use std::collections::HashMap;
-use std::future::Future;
-use std::pin::Pin;
-use std::sync::Arc;
 
 pub trait Handler {
     fn call(

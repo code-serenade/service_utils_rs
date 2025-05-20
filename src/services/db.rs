@@ -1,9 +1,12 @@
-use crate::error::Result;
-use crate::settings::SurrealdbCfg;
 use std::sync::LazyLock;
-use surrealdb::engine::remote::ws::{Client, Ws};
-use surrealdb::opt::auth::Root;
-use surrealdb::Surreal;
+
+use surrealdb::{
+    engine::remote::ws::{Client, Ws},
+    opt::auth::Root,
+    Surreal,
+};
+
+use crate::{error::Result, settings::SurrealdbCfg};
 
 static DB: LazyLock<Surreal<Client>> = LazyLock::new(Surreal::init);
 

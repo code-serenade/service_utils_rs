@@ -1,3 +1,7 @@
+use std::collections::HashMap;
+
+use tokio::sync::mpsc::UnboundedReceiver;
+
 use super::{
     error_code::{SUCCECE, SYSTEM_ERROR},
     events::SocketEvents,
@@ -7,9 +11,6 @@ use crate::{
     error::{Error, Result},
     services::websocket::{Message, MsgSender},
 };
-
-use std::collections::HashMap;
-use tokio::sync::mpsc::UnboundedReceiver;
 
 pub struct SocketManager {
     connections: HashMap<u32, Connection>,

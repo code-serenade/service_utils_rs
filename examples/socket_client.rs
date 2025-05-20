@@ -1,14 +1,18 @@
+use std::{error::Error, sync::Arc};
+
 use service_utils_rs::services::websocket::{
     client::{client_router::ClientRouter, WebSocketClient},
     JsonMessage,
 };
-use std::{error::Error, sync::Arc};
 use tokio::time::Duration;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     // 初始化 WebSocket 客户端并连接到服务器
-    let url = "ws://192.168.110.177:10031/?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJ0ZXN0Iiwic3ViIjoiMiIsImV4cCI6MTczOTk1NTA3MCwiaWF0IjoxNzM5MzUwMjcwfQ.uOc5-2ACjyZPY5BbwiqGYCkCzNz84SocT0Tc2NKZITo".to_string();
+    let url = "ws://192.168.110.177:10031/?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.\
+               eyJhdWQiOiJ0ZXN0Iiwic3ViIjoiMiIsImV4cCI6MTczOTk1NTA3MCwiaWF0IjoxNzM5MzUwMjcwfQ.\
+               uOc5-2ACjyZPY5BbwiqGYCkCzNz84SocT0Tc2NKZITo"
+        .to_string();
     let mut router = ClientRouter::new();
     router.add_route("test", hh);
     let r = Arc::new(router);

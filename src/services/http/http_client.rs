@@ -1,7 +1,7 @@
-use crate::error::{Error, Result};
-
 use reqwest::{header::HeaderValue, Client, Response};
 use url::Url;
+
+use crate::error::{Error, Result};
 
 #[derive(Debug, Clone)]
 pub struct HeaderMap {

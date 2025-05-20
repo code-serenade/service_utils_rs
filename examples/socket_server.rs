@@ -1,11 +1,17 @@
 use std::sync::Arc;
 
-use service_utils_rs::error::Result;
-
-use service_utils_rs::services::websocket::server::server_router::ServerRouter;
-use service_utils_rs::services::websocket::server::SocketEventSender;
-use service_utils_rs::services::websocket::{self, JsonMessage};
-use service_utils_rs::{services::jwt::Jwt, settings::Settings};
+use service_utils_rs::{
+    error::Result,
+    services::{
+        jwt::Jwt,
+        websocket::{
+            self,
+            server::{server_router::ServerRouter, SocketEventSender},
+            JsonMessage,
+        },
+    },
+    settings::Settings,
+};
 
 #[tokio::main]
 async fn main() -> Result<()> {

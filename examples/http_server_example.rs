@@ -1,8 +1,5 @@
 use axum::Router;
-use service_utils_rs::error::Result;
-
-use service_utils_rs::services::http::http_server;
-use service_utils_rs::settings::Settings;
+use service_utils_rs::{error::Result, services::http::http_server, settings::Settings};
 
 #[tokio::main]
 async fn main() -> Result<()> {

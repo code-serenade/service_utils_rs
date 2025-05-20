@@ -1,12 +1,13 @@
 use std::sync::Arc;
 
-use crate::services::jwt::Jwt;
 use axum::{
     extract::Request,
     http::{header, HeaderMap, StatusCode},
     middleware::Next,
     response::Response,
 };
+
+use crate::services::jwt::Jwt;
 
 pub async fn auth(mut req: Request, next: Next) -> Result<Response, StatusCode> {
     let headers = req.headers();

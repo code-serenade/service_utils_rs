@@ -23,12 +23,14 @@ where
     T: Copy + Into<u64> + TryFrom<u64>,
     <T as TryFrom<u64>>::Error: std::fmt::Debug,
 {
-    /// Parses the header of a `Vec<T>` and converts each element into its big-endian byte representation.
+    /// Parses the header of a `Vec<T>` and converts each element into its big-endian byte
+    /// representation.
     ///
     /// This method works for any type `T` that implements the `Copy` and `Into<u64>` traits.
     ///
     /// # Returns
-    /// A `Vec<u8>` where each element of the original vector is represented by its big-endian byte sequence.
+    /// A `Vec<u8>` where each element of the original vector is represented by its big-endian byte
+    /// sequence.
     ///
     /// # Example
     /// ```
@@ -49,7 +51,7 @@ where
             let e = (i + 1) * type_size; // End index for the byte slice
             let bytes = value.into().to_be_bytes(); // Convert the value to a big-endian byte array
                                                     // Copy the relevant portion of the byte array into the header vector
-            header[s..e].copy_from_slice(&bytes[bytes.len() - type_size..]);
+            header[s .. e].copy_from_slice(&bytes[bytes.len() - type_size ..]);
         }
         header // Return the resulting byte vector
     }
@@ -74,8 +76,8 @@ where
         let mut result = Vec::with_capacity(header.len() / type_size);
         for chunk in header.chunks(type_size) {
             let mut array = [0u8; 8]; // Used to store a u64 with up to 64 bits
-            let bytes_to_copy = &chunk[0..type_size];
-            array[8 - type_size..].copy_from_slice(bytes_to_copy); // Copy bytes to the end of the array
+            let bytes_to_copy = &chunk[0 .. type_size];
+            array[8 - type_size ..].copy_from_slice(bytes_to_copy); // Copy bytes to the end of the array
             let value = u64::from_be_bytes(array);
             result.push(T::try_from(value).unwrap());
         }

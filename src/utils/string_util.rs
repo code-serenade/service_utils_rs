@@ -76,7 +76,8 @@ mod tests {
         assert_eq!(query_string.extract_value("key2"), Some("val2"));
     }
 
-    /// Tests the `extract_value` method with a query string containing multiple keys with the same name.
+    /// Tests the `extract_value` method with a query string containing multiple keys with the same
+    /// name.
     #[test]
     fn test_extract_value_multiple_keys() {
         let query = "key1=val1&key1=val2&key3=val3";

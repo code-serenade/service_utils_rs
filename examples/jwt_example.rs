@@ -1,6 +1,4 @@
-use service_utils_rs::error::Result;
-use service_utils_rs::services::jwt::Jwt;
-use service_utils_rs::settings::Settings;
+use service_utils_rs::{error::Result, services::jwt::Jwt, settings::Settings};
 
 fn main() -> Result<()> {
     let settings = Settings::new("examples/config/services.toml").unwrap();

@@ -5,18 +5,23 @@ pub mod manager;
 pub mod server_connection;
 pub mod server_router;
 
-use crate::error::Result;
-use crate::utils::string_util::QueryExtractor;
+use std::sync::Arc;
+
 use events::SocketEvents;
 use server_router::ServerRouter;
-use std::sync::Arc;
-use tokio::sync::mpsc;
-use tokio::{net::TcpListener, sync::mpsc::UnboundedSender};
-use tokio_tungstenite::tungstenite::http;
+use tokio::{
+    net::TcpListener,
+    sync::{mpsc, mpsc::UnboundedSender},
+};
 use tokio_tungstenite::{
     accept_hdr_async,
-    tungstenite::handshake::server::{Request, Response},
+    tungstenite::{
+        handshake::server::{Request, Response},
+        http,
+    },
 };
+
+use crate::{error::Result, utils::string_util::QueryExtractor};
 
 pub type SocketEventSender = UnboundedSender<SocketEvents>;
 

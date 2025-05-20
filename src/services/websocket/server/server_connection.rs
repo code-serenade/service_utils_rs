@@ -1,14 +1,9 @@
-use super::{server_router::ServerRouter, SocketEventSender};
-use crate::{
-    error::{Error, Result},
-    services::websocket::{server::events::SocketEvents, JsonMessage, MsgReciver, MsgSender},
-};
+use std::sync::Arc;
 
 use futures_util::{
     stream::{SplitSink, SplitStream},
     SinkExt, StreamExt,
 };
-use std::sync::Arc;
 use tokio::{
     net::TcpStream,
     sync::{
@@ -17,6 +12,12 @@ use tokio::{
     },
 };
 use tokio_tungstenite::{tungstenite::Message, WebSocketStream};
+
+use super::{server_router::ServerRouter, SocketEventSender};
+use crate::{
+    error::{Error, Result},
+    services::websocket::{server::events::SocketEvents, JsonMessage, MsgReciver, MsgSender},
+};
 
 /// Alias for the writing half of a WebSocket connection.
 type SocketWriter = SplitSink<WebSocketStream<TcpStream>, Message>;

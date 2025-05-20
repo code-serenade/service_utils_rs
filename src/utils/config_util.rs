@@ -12,11 +12,12 @@ where
     config.try_deserialize()
 }
 
-//帮我写一个test
+// 帮我写一个test
 #[cfg(test)]
 mod tests {
-    use super::*;
     use serde::Deserialize;
+
+    use super::*;
 
     #[derive(Debug, Deserialize)]
     pub struct Settings {

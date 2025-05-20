@@ -1,8 +1,7 @@
 mod client_connection;
 pub mod client_router;
 
-use super::{JsonMessage, MsgReciver, MsgSender};
-use crate::error::{Error, Result};
+use std::{sync::Arc, time::Duration};
 
 use client_connection::ClientConnection;
 use client_router::ClientRouter;
@@ -10,13 +9,15 @@ use futures::{
     stream::{SplitSink, SplitStream},
     SinkExt, StreamExt,
 };
-use std::{sync::Arc, time::Duration};
 use tokio::{
     net::TcpStream,
     sync::mpsc::{self, Receiver, Sender},
     time,
 };
 use tokio_tungstenite::{connect_async, tungstenite::Message, MaybeTlsStream, WebSocketStream};
+
+use super::{JsonMessage, MsgReciver, MsgSender};
+use crate::error::{Error, Result};
 
 type SocketReader = SplitStream<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>>;
 type SocketWriter = SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>;
