@@ -1,7 +1,9 @@
-use config::{Config, ConfigError, File};
+use config::{Config, File};
 use serde::de::DeserializeOwned;
 
-pub fn load_settings<T>(config_path: &str) -> Result<T, ConfigError>
+use crate::error::Result;
+
+pub fn load_settings<T>(config_path: &str) -> Result<T>
 where
     T: DeserializeOwned,
 {
@@ -9,10 +11,10 @@ where
         .add_source(File::with_name(config_path))
         .build()?;
 
-    config.try_deserialize()
+    let r = config.try_deserialize()?;
+    Ok(r)
 }
 
-// 帮我写一个test
 #[cfg(test)]
 mod tests {
     use serde::Deserialize;
@@ -32,7 +34,7 @@ mod tests {
     #[test]
     fn test_load_settings() {
         let config_path = "tests/test_config.toml"; // Adjust the path as needed
-        let result: Result<Settings, ConfigError> = load_settings(config_path);
+        let result: Result<Settings> = load_settings(config_path);
         assert!(result.is_ok());
         let config = result.unwrap();
         assert_eq!(config.test.test_key, "test_value");

@@ -27,6 +27,9 @@ pub enum Error {
     #[error("db error: {0}")]
     DbError(#[from] surrealdb::Error),
 
+    #[error("config error: {0}")]
+    ConfigError(#[from] config::ConfigError),
+
     #[error("{message:} ({line:}, {column})")]
     CustomError {
         message: String,
