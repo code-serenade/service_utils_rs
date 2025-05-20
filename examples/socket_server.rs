@@ -1,5 +1,7 @@
+mod common;
 use std::sync::Arc;
 
+use common::settings::Settings;
 use service_utils_rs::{
     error::Result,
     services::{
@@ -10,7 +12,6 @@ use service_utils_rs::{
             JsonMessage,
         },
     },
-    settings::Settings,
 };
 
 #[tokio::main]

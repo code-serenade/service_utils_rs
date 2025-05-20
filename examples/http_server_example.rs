@@ -1,5 +1,7 @@
+mod common;
 use axum::Router;
-use service_utils_rs::{error::Result, services::http::http_server, settings::Settings};
+use common::settings::Settings;
+use service_utils_rs::{error::Result, services::http::http_server};
 
 #[tokio::main]
 async fn main() -> Result<()> {

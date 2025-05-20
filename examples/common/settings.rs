@@ -1,6 +1,9 @@
 use serde::Deserialize;
-
-use crate::{error::Result, utils::load_settings};
+#[cfg(feature = "db")]
+use service_utils_rs::services::db::SurrealdbCfg;
+#[cfg(feature = "jwt")]
+use service_utils_rs::services::jwt::JwtCfg;
+use service_utils_rs::{error::Result, utils::load_settings};
 
 #[derive(Debug, Deserialize)]
 pub struct Settings {
@@ -12,31 +15,6 @@ pub struct Settings {
     pub websocket: WebsocketCfg,
     #[cfg(feature = "http")]
     pub http: HttpCfg,
-}
-
-/// Struct representing the JWT configuration parameters.
-#[cfg(feature = "jwt")]
-#[derive(Debug, Deserialize)]
-pub struct JwtCfg {
-    pub access_secret: String,
-    pub refresh_secret: String,
-    pub audience: String,
-    pub access_token_duration: usize,
-    pub refresh_token_duration: usize,
-    pub access_key_validate_exp: bool,
-    pub refresh_key_validate_exp: bool,
-}
-
-/// Struct representing the Surrealdb configuration parameters.
-#[cfg(feature = "db")]
-#[derive(Debug, Deserialize)]
-pub struct SurrealdbCfg {
-    pub host: String,
-    pub port: u16,
-    pub username: String,
-    pub password: String,
-    pub namespace: String,
-    pub database: String,
 }
 
 /// Struct representing the websocket server configuration parameters.

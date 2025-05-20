@@ -1,4 +1,7 @@
-use service_utils_rs::{error::Result, services::jwt::Jwt, settings::Settings};
+mod common;
+
+use common::Settings;
+use service_utils_rs::{error::Result, services::jwt::Jwt};
 
 fn main() -> Result<()> {
     let settings = Settings::load("examples/config/services.toml").unwrap();

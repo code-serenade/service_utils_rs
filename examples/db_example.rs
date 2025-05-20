@@ -1,4 +1,6 @@
-use service_utils_rs::{services::db, settings::Settings};
+mod common;
+use common::settings::Settings;
+use service_utils_rs::services::db;
 
 #[tokio::main]
 async fn main() {
