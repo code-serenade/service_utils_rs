@@ -1,4 +1,3 @@
-use config::{Config, ConfigError};
 use serde::Deserialize;
 
 use crate::{error::Result, utils::load_settings};
