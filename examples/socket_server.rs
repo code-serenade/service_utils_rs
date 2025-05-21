@@ -1,7 +1,7 @@
 mod common;
 use std::sync::Arc;
 
-use common::settings::Settings;
+use common::Settings;
 use service_utils_rs::{
     error::Result,
     services::{

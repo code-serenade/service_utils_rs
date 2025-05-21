@@ -1,2 +1,2 @@
-pub mod settings;
+mod settings;
 pub use settings::Settings;
