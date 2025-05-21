@@ -1,35 +1,48 @@
 use serde::Serialize;
 use utoipa::ToSchema;
 
-pub trait IntoCommonResponse {
-    fn into_common_response_data(self) -> CommonResponse;
+type Empty = ();
+
+pub type CommonOk = CommonResponse<Empty>;
+
+pub trait IntoCommonResponse<T>
+where
+    T: Serialize + ToSchema,
+{
+    fn into_common_response_data(self) -> CommonResponse<T>;
 }
 
-impl<T> IntoCommonResponse for T
+impl<T> IntoCommonResponse<T> for T
 where
-    T: Serialize,
+    T: Serialize + ToSchema,
 {
-    fn into_common_response_data(self) -> CommonResponse {
+    fn into_common_response_data(self) -> CommonResponse<T> {
         CommonResponse {
             code: 0,
-            data: serde_json::to_value(self).expect("Failed to convert to serde_json::Value"),
+            data: self,
             message: String::from("Success"),
         }
     }
 }
 
 #[derive(Debug, Serialize, ToSchema)]
-pub struct CommonResponse {
+pub struct CommonResponse<T>
+where
+    T: Serialize + ToSchema,
+{
     pub code: i16,
-    pub data: serde_json::Value,
+    pub data: T,
     pub message: String,
 }
 
-impl Default for CommonResponse {
+impl<T> Default for CommonResponse<T>
+where
+    T: Serialize + ToSchema + Default,
+{
     fn default() -> Self {
         CommonResponse {
             code: 0,
-            data: serde_json::Value::Null,
+            data: T::default(),
             message: String::from("Success"),
         }
     }
