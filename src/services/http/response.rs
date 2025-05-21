@@ -1,3 +1,5 @@
+use axum::Json;
+use reqwest::StatusCode;
 use serde::Serialize;
 use utoipa::ToSchema;
 
@@ -62,3 +64,5 @@ impl Into<CommonError> for (i16, &str) {
         }
     }
 }
+
+pub type Result<T> = core::result::Result<CommonResponse<T>, (StatusCode, Json<CommonError>)>;
