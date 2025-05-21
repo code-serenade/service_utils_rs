@@ -39,6 +39,15 @@ where
     pub message: String,
 }
 
+impl<T> CommonResponse<T>
+where
+    T: Serialize + ToSchema,
+{
+    pub fn to_json(self) -> Json<Self> {
+        Json(self)
+    }
+}
+
 impl<T> Default for CommonResponse<T>
 where
     T: Serialize + ToSchema + Default,
@@ -58,6 +67,12 @@ pub struct CommonError {
     pub message: String,
 }
 
+impl CommonError {
+    pub fn to_json(self) -> Json<Self> {
+        Json(self)
+    }
+}
+
 impl Into<CommonError> for (i16, &str) {
     fn into(self) -> CommonError {
         CommonError {
@@ -67,4 +82,4 @@ impl Into<CommonError> for (i16, &str) {
     }
 }
 
-pub type Result<T> = core::result::Result<CommonResponse<T>, (StatusCode, Json<CommonError>)>;
+pub type Result<T> = core::result::Result<Json<CommonResponse<T>>, (StatusCode, Json<CommonError>)>;
