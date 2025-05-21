@@ -1,9 +1,11 @@
-use axum::Json;
-use reqwest::StatusCode;
+use core::str;
+
+use axum::{Json, http::StatusCode};
 use serde::Serialize;
 use utoipa::ToSchema;
 
-type Empty = ();
+#[derive(Debug, Serialize, ToSchema, Default, Clone)]
+pub struct Empty;
 
 pub type CommonOk = CommonResponse<Empty>;
 
@@ -11,14 +13,14 @@ pub trait IntoCommonResponse<T>
 where
     T: Serialize + ToSchema,
 {
-    fn into_common_response_data(self) -> CommonResponse<T>;
+    fn into_common_response(self) -> CommonResponse<T>;
 }
 
 impl<T> IntoCommonResponse<T> for T
 where
     T: Serialize + ToSchema,
 {
-    fn into_common_response_data(self) -> CommonResponse<T> {
+    fn into_common_response(self) -> CommonResponse<T> {
         CommonResponse {
             code: 0,
             data: self,
