@@ -1,4 +1,4 @@
-use reqwest::{header::HeaderValue, Client, Response};
+use reqwest::{Client, Response, header::HeaderValue};
 use url::Url;
 
 use crate::error::{Error, Result};

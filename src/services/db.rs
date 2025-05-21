@@ -2,9 +2,9 @@ use std::sync::LazyLock;
 
 use serde::Deserialize;
 use surrealdb::{
+    Surreal,
     engine::remote::ws::{Client, Ws},
     opt::auth::Root,
-    Surreal,
 };
 
 use crate::error::Result;

@@ -1,8 +1,8 @@
 use std::{error::Error, sync::Arc};
 
 use service_utils_rs::services::websocket::{
-    client::{client_router::ClientRouter, WebSocketClient},
     JsonMessage,
+    client::{WebSocketClient, client_router::ClientRouter},
 };
 use tokio::time::Duration;
 

@@ -28,12 +28,13 @@ reqwest = { version = "0.12", features = ["json"], optional = true }
 tower-http = { version = "0.6", features = ["cors"], optional = true }
 surrealdb = { version = "2", optional = true }
 rand = { version = "0.9" }
+utoipa = { version = "5", optional = true }
 
 [features]
 jwt = ["jsonwebtoken"]
 websocket = ["tokio-tungstenite"]
 db = ["surrealdb"]
-http = ["axum", "reqwest", "tower-http"]
+http = ["axum", "reqwest", "tower-http", "utoipa"]
 
 full = ["jwt", "websocket", "db", "http"]
 

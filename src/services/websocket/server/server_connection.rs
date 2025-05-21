@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use futures_util::{
-    stream::{SplitSink, SplitStream},
     SinkExt, StreamExt,
+    stream::{SplitSink, SplitStream},
 };
 use tokio::{
     net::TcpStream,
@@ -11,12 +11,12 @@ use tokio::{
         oneshot,
     },
 };
-use tokio_tungstenite::{tungstenite::Message, WebSocketStream};
+use tokio_tungstenite::{WebSocketStream, tungstenite::Message};
 
-use super::{server_router::ServerRouter, SocketEventSender};
+use super::{SocketEventSender, server_router::ServerRouter};
 use crate::{
     error::{Error, Result},
-    services::websocket::{server::events::SocketEvents, JsonMessage, MsgReciver, MsgSender},
+    services::websocket::{JsonMessage, MsgReciver, MsgSender, server::events::SocketEvents},
 };
 
 /// Alias for the writing half of a WebSocket connection.

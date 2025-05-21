@@ -7,9 +7,8 @@ use service_utils_rs::{
     services::{
         jwt::Jwt,
         websocket::{
-            self,
-            server::{server_router::ServerRouter, SocketEventSender},
-            JsonMessage,
+            self, JsonMessage,
+            server::{SocketEventSender, server_router::ServerRouter},
         },
     },
 };

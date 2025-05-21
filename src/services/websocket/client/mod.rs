@@ -6,15 +6,15 @@ use std::{sync::Arc, time::Duration};
 use client_connection::ClientConnection;
 use client_router::ClientRouter;
 use futures::{
-    stream::{SplitSink, SplitStream},
     SinkExt, StreamExt,
+    stream::{SplitSink, SplitStream},
 };
 use tokio::{
     net::TcpStream,
     sync::mpsc::{self, Receiver, Sender},
     time,
 };
-use tokio_tungstenite::{connect_async, tungstenite::Message, MaybeTlsStream, WebSocketStream};
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, connect_async, tungstenite::Message};
 
 use super::{JsonMessage, MsgReciver, MsgSender};
 use crate::error::{Error, Result};

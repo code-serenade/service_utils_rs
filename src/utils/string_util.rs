@@ -23,11 +23,7 @@ impl<T: AsRef<str>> QueryExtractor for T {
             let mut parts = pair.split('=');
             let k = parts.next()?;
             let v = parts.next()?;
-            if k == key {
-                Some(v)
-            } else {
-                None
-            }
+            if k == key { Some(v) } else { None }
         })
     }
 }

@@ -50,7 +50,7 @@ where
             let s = i * type_size; // Start index for the byte slice
             let e = (i + 1) * type_size; // End index for the byte slice
             let bytes = value.into().to_be_bytes(); // Convert the value to a big-endian byte array
-                                                    // Copy the relevant portion of the byte array into the header vector
+            // Copy the relevant portion of the byte array into the header vector
             header[s .. e].copy_from_slice(&bytes[bytes.len() - type_size ..]);
         }
         header // Return the resulting byte vector
