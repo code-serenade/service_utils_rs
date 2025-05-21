@@ -1,6 +1,6 @@
 mod common;
 use axum::Router;
-use common::settings::Settings;
+use common::Settings;
 use service_utils_rs::{error::Result, services::http::http_server};
 
 #[tokio::main]

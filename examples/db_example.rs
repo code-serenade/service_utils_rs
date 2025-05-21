@@ -1,5 +1,5 @@
 mod common;
-use common::settings::Settings;
+use common::Settings;
 use service_utils_rs::services::db;
 
 #[tokio::main]
