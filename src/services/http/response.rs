@@ -82,4 +82,6 @@ impl Into<CommonError> for (i16, &str) {
     }
 }
 
-pub type Result<T> = core::result::Result<Json<CommonResponse<T>>, (StatusCode, Json<CommonError>)>;
+pub type ResponseResult<T> =
+    core::result::Result<Json<CommonResponse<T>>, (StatusCode, Json<CommonError>)>;
+pub type Result<T> = core::result::Result<T, (StatusCode, Json<CommonError>)>;
