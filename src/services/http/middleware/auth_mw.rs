@@ -9,6 +9,9 @@ use axum::{
 
 use crate::services::jwt::Jwt;
 
+#[derive(Debug, Clone)]
+pub struct UserId(pub String);
+
 pub async fn auth(mut req: Request, next: Next) -> Result<Response, StatusCode> {
     let headers = req.headers();
     let token = parse_token(headers)?;
@@ -19,7 +22,8 @@ pub async fn auth(mut req: Request, next: Next) -> Result<Response, StatusCode> 
     let claims = jwt
         .validate_access_token(&token)
         .map_err(|_| StatusCode::UNAUTHORIZED)?;
-    req.extensions_mut().insert(claims.sub);
+    let user_id = UserId(claims.sub);
+    req.extensions_mut().insert(user_id);
 
     Ok(next.run(req).await)
 }
