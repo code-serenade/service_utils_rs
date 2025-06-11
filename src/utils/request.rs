@@ -1,9 +1,13 @@
+use std::pin::Pin;
+
 use bytes::Bytes;
 use futures_util::{Stream, StreamExt};
 use reqwest::{Client, Response, header::HeaderValue};
 use url::Url;
 
 use crate::error::{Error, Result};
+
+pub type ByteStream = Pin<Box<dyn Stream<Item = crate::error::Result<Bytes>> + Send>>;
 
 /// Wrapper for HTTP headers used in request construction.
 #[derive(Debug, Clone)]
@@ -172,7 +176,7 @@ impl Request {
         let stream = response
             .bytes_stream()
             .map(|chunk_result| chunk_result.map_err(Error::from));
-        Ok(stream)
+        Ok(Box::pin(stream))
     }
 
     /// Build a full URL by combining base URL, endpoint, and optional query parameters.
