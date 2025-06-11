@@ -34,9 +34,10 @@ utoipa = { version = "5", optional = true }
 jwt = ["jsonwebtoken"]
 websocket = ["tokio-tungstenite"]
 db = ["surrealdb"]
+request = ["reqwest"]
 http = ["axum", "reqwest", "tower-http", "utoipa"]
 
-full = ["jwt", "websocket", "db", "http"]
+full = ["jwt", "websocket", "db", "http", "request"]
 
 [package.metadata.docs.rs]
-features = ["jwt", "websocket", "db", "http"]
+features = ["jwt", "websocket", "db", "http", "request"]

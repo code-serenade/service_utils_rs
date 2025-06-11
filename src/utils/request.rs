@@ -37,16 +37,16 @@ impl HeaderMap {
 }
 
 #[derive(Debug)]
-pub struct HttpClient {
+pub struct Request {
     client: Client,
     base_url: Option<Url>,
     default_headers: HeaderMap,
 }
 
-impl HttpClient {
+impl Request {
     // 创建新的 HTTP 客户端
     pub fn new() -> Self {
-        HttpClient {
+        Request {
             client: Client::new(),
             base_url: None,
             default_headers: HeaderMap::new(),

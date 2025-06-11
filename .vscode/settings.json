@@ -1,3 +1,3 @@
 {
-  "rust-analyzer.cargo.features": ["jwt", "websocket", "db", "http"]
+	"rust-analyzer.cargo.features": ["jwt", "websocket", "db", "http", "request"]
 }

@@ -1,10 +1,10 @@
 use serde_json::json;
-use service_utils_rs::{error::Result, services::http::http_client::HttpClient};
+use service_utils_rs::{error::Result, utils::Request};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // 创建一个新的 HttpClient 实例
-    let mut client = HttpClient::new();
+    // 创建一个新的 Request 实例
+    let mut client = Request::new();
 
     // 设置 base_url
     client.set_base_url("https://jsonplaceholder.typicode.com")?;
@@ -46,4 +46,4 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-// cargo run --example http_example --features http
+// cargo run --example request_example  --features request
