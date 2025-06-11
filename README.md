@@ -20,7 +20,7 @@ Add the following dependency to your `Cargo.toml` file:
 
 ```toml
 [dependencies]
-service_utils_rs = "0.3.19"
+service_utils_rs = "0.3.20"
 ```
 ````
 
