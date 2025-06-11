@@ -159,7 +159,7 @@ impl Request {
         endpoint: &str,
         body: &serde_json::Value,
         headers: Option<Vec<(&'static str, String)>>,
-    ) -> Result<impl Stream<Item = Result<Bytes>>> {
+    ) -> Result<ByteStream> {
         let url = self.build_url(endpoint, None)?;
         let mut request = self.client.post(url).json(body);
         let combined_headers = self.merge_headers(headers)?;
