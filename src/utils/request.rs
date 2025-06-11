@@ -1,3 +1,5 @@
+use bytes::Bytes;
+use futures_util::{Stream, StreamExt};
 use reqwest::{Client, Response, header::HeaderValue};
 use url::Url;
 
@@ -130,6 +132,26 @@ impl Request {
         request = request.headers(combined_headers.inner().clone());
         let response = request.send().await?;
         Ok(response)
+    }
+
+    /// Send a streaming POST request and return the response stream.
+    pub async fn post_stream(
+        &self,
+        endpoint: &str,
+        body: &serde_json::Value,
+        headers: Option<Vec<(&'static str, String)>>,
+    ) -> Result<impl Stream<Item = Result<Bytes>>> {
+        let url = self.build_url(endpoint, None)?;
+        let mut request = self.client.post(url).json(body);
+        let combined_headers = self.merge_headers(headers)?;
+        request = request.headers(combined_headers.inner().clone());
+
+        let response = request.send().await?;
+
+        let stream = response
+            .bytes_stream()
+            .map(|chunk_result| chunk_result.map_err(Error::from));
+        Ok(stream)
     }
 
     /// Build a full URL by combining base URL, endpoint, and optional query parameters.
