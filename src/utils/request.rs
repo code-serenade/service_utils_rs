@@ -52,10 +52,25 @@ impl Request {
     /// Create a new Request client.
     pub fn new() -> Self {
         Request {
-            client: Client::new(),
+            client: Client::builder()
+                .timeout(std::time::Duration::from_secs(10))
+                .build()
+                .unwrap(),
             base_url: None,
             default_headers: HeaderMap::new(),
         }
+    }
+
+    pub fn with_timeout(timeout_sec: u64) -> Result<Self> {
+        let client = Client::builder()
+            .timeout(std::time::Duration::from_secs(timeout_sec))
+            .build()
+            .map_err(|e| Error::ErrorMessage(e.to_string()))?;
+        Ok(Request {
+            client,
+            base_url: None,
+            default_headers: HeaderMap::new(),
+        })
     }
 
     /// Set the base URL for all requests.
@@ -147,6 +162,12 @@ impl Request {
         request = request.headers(combined_headers.inner().clone());
 
         let response = request.send().await?;
+        if !response.status().is_success() {
+            return Err(Error::ErrorMessage(format!(
+                "Unexpected status: {}",
+                response.status()
+            )));
+        }
 
         let stream = response
             .bytes_stream()

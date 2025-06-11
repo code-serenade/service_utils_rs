@@ -35,9 +35,10 @@ jwt = ["jsonwebtoken"]
 websocket = ["tokio-tungstenite"]
 db = ["surrealdb"]
 request = ["reqwest"]
-http = ["axum", "reqwest", "tower-http", "utoipa"]
+http = ["axum", "tower-http", "utoipa"]
 
 full = ["jwt", "websocket", "db", "http", "request"]
+default = ["request"]
 
 [package.metadata.docs.rs]
 features = ["jwt", "websocket", "db", "http", "request"]
