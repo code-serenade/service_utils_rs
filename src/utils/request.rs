@@ -2,7 +2,7 @@ use std::pin::Pin;
 
 use bytes::Bytes;
 use futures_util::{Stream, StreamExt};
-use reqwest::{Client, Response, header::HeaderValue};
+use reqwest::Client;
 use url::Url;
 
 use crate::error::{Error, Result};
@@ -25,7 +25,7 @@ impl HeaderMap {
 
     /// Insert a header key-value pair.
     pub fn insert(&mut self, key: &'static str, value: String) -> Result<()> {
-        let header_value = HeaderValue::from_str(&value)
+        let header_value = reqwest::header::HeaderValue::from_str(&value)
             .map_err(|_| Error::ErrorMessage("invalid headerValue".into()))?;
         self.headers.insert(key, header_value);
         Ok(())
@@ -41,6 +41,61 @@ impl HeaderMap {
     /// Get reference to the internal reqwest HeaderMap.
     pub fn inner(&self) -> &reqwest::header::HeaderMap {
         &self.headers
+    }
+}
+
+pub struct Response {
+    response: reqwest::Response,
+}
+
+impl From<reqwest::Response> for Response {
+    fn from(response: reqwest::Response) -> Self {
+        Response { response }
+    }
+}
+
+impl Response {
+    /// Create a new Response wrapper.
+    pub fn new(response: reqwest::Response) -> Self {
+        Response { response }
+    }
+
+    /// Get the underlying reqwest Response.
+    pub fn inner(&self) -> &reqwest::Response {
+        &self.response
+    }
+
+    /// Get the status code of the response.
+    pub fn status(&self) -> reqwest::StatusCode {
+        self.inner().status()
+    }
+
+    /// Get the response body as a string.
+    pub async fn text(self) -> Result<String> {
+        self.response
+            .text()
+            .await
+            .map_err(Error::from)
+            .map(|s| s.to_string())
+    }
+
+    /// Get the response body as JSON.
+    pub async fn json<T: serde::de::DeserializeOwned>(self) -> Result<T> {
+        self.response.json::<T>().await.map_err(Error::from)
+    }
+
+    /// Get the response body as bytes.
+    pub async fn bytes(self) -> Result<Bytes> {
+        self.response.bytes().await.map_err(Error::from)
+    }
+
+    /// Get the response body as a stream of bytes.
+    pub fn bytes_stream(self) -> ByteStream {
+        let stream = self
+            .response
+            .bytes_stream()
+            .map(|chunk_result| chunk_result.map_err(Error::from));
+        Box::pin(stream)
     }
 }
 
@@ -106,7 +161,7 @@ impl Request {
         let combined_headers = self.merge_headers(headers)?;
         request = request.headers(combined_headers.inner().clone());
         let response = request.send().await?;
-        Ok(response)
+        Ok(response.into())
     }
 
     /// Send a POST request with JSON body.
@@ -121,7 +176,7 @@ impl Request {
         let combined_headers = self.merge_headers(headers)?;
         request = request.headers(combined_headers.inner().clone());
         let response = request.send().await?;
-        Ok(response)
+        Ok(response.into())
     }
 
     /// Send a PUT request with JSON body.
@@ -136,7 +191,7 @@ impl Request {
         let combined_headers = self.merge_headers(headers)?;
         request = request.headers(combined_headers.inner().clone());
         let response = request.send().await?;
-        Ok(response)
+        Ok(response.into())
     }
 
     /// Send a DELETE request.
@@ -150,7 +205,7 @@ impl Request {
         let combined_headers = self.merge_headers(headers)?;
         request = request.headers(combined_headers.inner().clone());
         let response = request.send().await?;
-        Ok(response)
+        Ok(response.into())
     }
 
     /// Send a streaming POST request and return the response stream.
