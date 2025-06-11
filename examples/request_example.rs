@@ -1,8 +1,9 @@
-use std::io::Write;
+use std::{io::Write, time::Duration};
 
 use futures_util::StreamExt;
 use serde_json::json;
 use service_utils_rs::{error::Result, utils::Request};
+use tokio::time::sleep;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -59,10 +60,6 @@ async fn main() -> Result<()> {
             {"role": "user", "content": "Hello, who are you?"}
         ]
     });
-
-    use std::time::Duration;
-
-    use tokio::time::sleep;
 
     let mut stream = client.post_stream("api/chat", &stream_body, None).await?;
 

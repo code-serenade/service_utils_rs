@@ -134,7 +134,11 @@ impl Request {
 
     /// Set the base URL for all requests.
     pub fn set_base_url(&mut self, base_url: &str) -> Result<()> {
-        let url = Url::parse(base_url)?;
+        let mut url_str = base_url.to_string();
+        if !url_str.ends_with('/') {
+            url_str.push('/');
+        }
+        let url = Url::parse(&url_str)?;
         self.base_url = Some(url);
         Ok(())
     }
