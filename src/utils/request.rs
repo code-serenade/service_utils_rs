@@ -3,19 +3,21 @@ use url::Url;
 
 use crate::error::{Error, Result};
 
+/// Wrapper for HTTP headers used in request construction.
 #[derive(Debug, Clone)]
 pub struct HeaderMap {
     headers: reqwest::header::HeaderMap,
 }
 
 impl HeaderMap {
-    // 创建一个新的 HeaderMap
+    /// Create a new empty HeaderMap.
     pub fn new() -> Self {
         HeaderMap {
             headers: reqwest::header::HeaderMap::new(),
         }
     }
 
+    /// Insert a header key-value pair.
     pub fn insert(&mut self, key: &'static str, value: String) -> Result<()> {
         let header_value = HeaderValue::from_str(&value)
             .map_err(|_| Error::ErrorMessage("invalid headerValue".into()))?;
@@ -23,19 +25,20 @@ impl HeaderMap {
         Ok(())
     }
 
-    // 获取 header 的值
+    /// Get the value of a header as String.
     pub fn get(&self, key: &'static str) -> Option<String> {
         self.headers
             .get(key)
             .map(|v| v.to_str().unwrap_or_default().to_string())
     }
 
-    // 返回内部的 HeaderMap
+    /// Get reference to the internal reqwest HeaderMap.
     pub fn inner(&self) -> &reqwest::header::HeaderMap {
         &self.headers
     }
 }
 
+/// An HTTP request builder and executor with base URL and default headers.
 #[derive(Debug)]
 pub struct Request {
     client: Client,
@@ -44,7 +47,7 @@ pub struct Request {
 }
 
 impl Request {
-    // 创建新的 HTTP 客户端
+    /// Create a new Request client.
     pub fn new() -> Self {
         Request {
             client: Client::new(),
@@ -53,18 +56,15 @@ impl Request {
         }
     }
 
-    // 设置 base_url
+    /// Set the base URL for all requests.
     pub fn set_base_url(&mut self, base_url: &str) -> Result<()> {
         let url = Url::parse(base_url)?;
         self.base_url = Some(url);
         Ok(())
     }
 
-    // 设置默认的请求头
-    pub fn set_default_headers(
-        &mut self,
-        headers: Vec<(&'static str, String)>, // 直接使用 Vec<(&'static str, String)>
-    ) -> Result<()> {
+    /// Set default headers to be applied on all requests.
+    pub fn set_default_headers(&mut self, headers: Vec<(&'static str, String)>) -> Result<()> {
         let mut header_map = HeaderMap::new();
         for (key, value) in headers {
             header_map.insert(key, value)?;
@@ -73,7 +73,7 @@ impl Request {
         Ok(())
     }
 
-    // 发送 GET 请求
+    /// Send a GET request.
     pub async fn get(
         &self,
         endpoint: &str,
@@ -88,7 +88,7 @@ impl Request {
         Ok(response)
     }
 
-    // 发送 POST 请求
+    /// Send a POST request with JSON body.
     pub async fn post(
         &self,
         endpoint: &str,
@@ -96,7 +96,6 @@ impl Request {
         headers: Option<Vec<(&'static str, String)>>,
     ) -> Result<Response> {
         let url = self.build_url(endpoint, None)?;
-
         let mut request = self.client.post(url).json(body);
         let combined_headers = self.merge_headers(headers)?;
         request = request.headers(combined_headers.inner().clone());
@@ -104,7 +103,7 @@ impl Request {
         Ok(response)
     }
 
-    // 发送 PUT 请求
+    /// Send a PUT request with JSON body.
     pub async fn put(
         &self,
         endpoint: &str,
@@ -112,7 +111,6 @@ impl Request {
         headers: Option<Vec<(&'static str, String)>>,
     ) -> Result<Response> {
         let url = self.build_url(endpoint, None)?;
-
         let mut request = self.client.put(url).json(body);
         let combined_headers = self.merge_headers(headers)?;
         request = request.headers(combined_headers.inner().clone());
@@ -120,14 +118,13 @@ impl Request {
         Ok(response)
     }
 
-    // 发送 DELETE 请求
+    /// Send a DELETE request.
     pub async fn delete(
         &self,
         endpoint: &str,
         headers: Option<Vec<(&'static str, String)>>,
     ) -> Result<Response> {
         let url = self.build_url(endpoint, None)?;
-
         let mut request = self.client.delete(url);
         let combined_headers = self.merge_headers(headers)?;
         request = request.headers(combined_headers.inner().clone());
@@ -135,7 +132,7 @@ impl Request {
         Ok(response)
     }
 
-    // 构建完整 URL
+    /// Build a full URL by combining base URL, endpoint, and optional query parameters.
     fn build_url(&self, endpoint: &str, query: Option<Vec<(String, String)>>) -> Result<Url> {
         let mut url = if let Some(base_url) = &self.base_url {
             base_url.join(endpoint)?
@@ -151,6 +148,7 @@ impl Request {
         Ok(url)
     }
 
+    /// Merge default headers with custom request headers.
     fn merge_headers(
         &self,
         custom_headers: Option<Vec<(&'static str, String)>>,
@@ -165,6 +163,7 @@ impl Request {
     }
 }
 
+/// Parse a full URL with optional query parameters.
 pub fn parse_url(url: &str, query: Option<Vec<(String, String)>>) -> Result<Url> {
     let mut url = Url::parse(url)?;
     if let Some(query_params) = query {
