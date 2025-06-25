@@ -9,18 +9,16 @@ pub trait Handler {
     ) -> Pin<Box<dyn Future<Output = Option<JsonMessage>> + Send>>;
 }
 
-impl<F> Handler for F
+impl<F, Fut> Handler for F
 where
-    F: Fn(serde_json::Value) -> Pin<Box<dyn Future<Output = Option<JsonMessage>> + Send>>
-        + Send
-        + Sync
-        + 'static,
+    F: Fn(serde_json::Value) -> Fut + Send + Sync + 'static,
+    Fut: Future<Output = Option<JsonMessage>> + Send + 'static,
 {
     fn call(
         &self,
         data: serde_json::Value,
     ) -> Pin<Box<dyn Future<Output = Option<JsonMessage>> + Send>> {
-        (self)(data)
+        Box::pin((self)(data))
     }
 }
 
@@ -55,24 +53,4 @@ impl ClientRouter {
             None
         }
     }
-}
-
-#[macro_export]
-macro_rules! add_handler {
-    ($router:expr, $action:expr, $typ:ty, $func:expr) => {{
-        use std::{future::Future, pin::Pin};
-        let wrapper = move |data: serde_json::Value| {
-            let parsed: $typ = match serde_json::from_value(data) {
-                Ok(v) => v,
-                Err(e) => {
-                    eprintln!("JSON parse error for action {}: {}", $action, e);
-                    return Box::pin(async { None }) as Pin<Box<dyn Future<Output = _> + Send>>;
-                }
-            };
-
-            let fut = async move { $func(parsed).await };
-            Box::pin(fut) as Pin<Box<dyn Future<Output = Option<JsonMessage>> + Send>>
-        };
-        $router.add_route($action, wrapper);
-    }};
 }

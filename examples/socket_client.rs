@@ -1,20 +1,23 @@
 use std::{error::Error, sync::Arc};
 
-use service_utils_rs::services::websocket::{
-    JsonMessage,
-    client::{WebSocketClient, client_router::ClientRouter},
+use service_utils_rs::{
+    add_handler,
+    services::websocket::{
+        JsonMessage,
+        client::{WebSocketClient, client_router::ClientRouter},
+    },
 };
 use tokio::time::Duration;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     // 初始化 WebSocket 客户端并连接到服务器
-    let url = "ws://192.168.110.177:10031/?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.\
+    let url = "ws://localhost:18123/?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.\
                eyJhdWQiOiJ0ZXN0Iiwic3ViIjoiMiIsImV4cCI6MTczOTk1NTA3MCwiaWF0IjoxNzM5MzUwMjcwfQ.\
                uOc5-2ACjyZPY5BbwiqGYCkCzNz84SocT0Tc2NKZITo"
         .to_string();
     let mut router = ClientRouter::new();
-    router.add_route("test", hh);
+    add_handler!(router, "test", Test, hh);
     let r = Arc::new(router);
     let client = WebSocketClient::new(url, r).await?;
     let c = Arc::new(client);
@@ -45,9 +48,10 @@ async fn send_json(c: Arc<WebSocketClient>) {
     c.send_json_message(msg).await.unwrap();
 }
 
-async fn hh(data: serde_json::Value) -> Option<JsonMessage> {
-    let test: Test = serde_json::from_value(data).unwrap();
-    println!("{:?}", test);
+async fn hh(data: Test) -> Option<JsonMessage> {
+    println!("Received data: {:?}", data);
+    // let test: Test = serde_json::from_value(data).unwrap();
+    // println!("{:?}", test);
     let msg = JsonMessage {
         action: "gg334".to_string(),
         data: serde_json::json!({"name": "test"}),

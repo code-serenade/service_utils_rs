@@ -38,7 +38,7 @@ request = ["reqwest"]
 http = ["axum", "tower-http", "utoipa"]
 
 full = ["jwt", "websocket", "db", "http", "request"]
-default = ["request"]
+default = ["full"]
 
 [package.metadata.docs.rs]
 features = ["jwt", "websocket", "db", "http", "request"]
